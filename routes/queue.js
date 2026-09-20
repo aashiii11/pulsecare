@@ -12,7 +12,7 @@ const router = express.Router();
 // File upload setup — for patients uploading report photos
 // ─────────────────────────────────────────────
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'reports');
-fs.mkdirSync(uploadsDir, { recursive: true }); // create the folder if it doesn't exist yet
+const dir = process.env.VERCEL ? '/tmp/reports' : path.join(__dirname, '../uploads/reports'); fs.mkdirSync(dir, { recursive: true }); // create the folder if it doesn't exist yet
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
