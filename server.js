@@ -5,7 +5,9 @@ connectDB();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const app = express();          // <-- app pehle banao
+const app = express();      
+app.use(express.static(path.join(__dirname, 'Frontend')));
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'Frontend', 'index.html')); });    // <-- app pehle banao
 
 app.use(cors());                // <-- fir cors use karo
 app.use(express.json());
