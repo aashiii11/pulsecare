@@ -2,7 +2,7 @@
 // Shared helper for talking to the backend API.
 // Change this if your backend runs on a different port.
 // ───────────────────────────────────────────────
-const SERVER_ORIGIN = 'http://localhost:5000';
+const SERVER_ORIGIN = '';
 const API_BASE = `${SERVER_ORIGIN}/api`;
 
 // Wraps fetch() and automatically attaches the login token (if we have one).
