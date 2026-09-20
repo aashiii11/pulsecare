@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — Clinic Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div style="padding: 10px 14px 24px;">
+      <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">CarePulse</p>
+      <h2 style="font-size: 17px; margin-top: 4px;">Hi, <span id="patient-name">there</span> 👋</h2>
+    </div>
+    <div class="nav-link active" onclick="showSection('overview')" id="nav-overview">🏠 Overview</div>
+    <div class="nav-link" onclick="showSection('book')" id="nav-book">📅 Book appointment</div>
+    <div class="nav-link" onclick="showSection('records')" id="nav-records">📁 My records &amp; reports</div>
+    <div style="flex: 1;"></div>
+    <div class="nav-link" onclick="logout()">🚪 Log out</div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <div id="alert-box"></div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: OVERVIEW -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-overview">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Overview</h1>
+          <p style="margin-top: 4px;">Your appointment summary at a glance</p>
+        </div>
+      </div>
+
+      <div class="stats-grid mt-24" id="patient-stats">
+        <div class="stat-card"><p class="stat-label">Total visits</p><p class="stat-value">—</p></div>
+        <div class="stat-card"><p class="stat-label">Waiting</p><p class="stat-value">—</p></div>
+        <div class="stat-card"><p class="stat-label">In progress</p><p class="stat-value">—</p></div>
+        <div class="stat-card"><p class="stat-label">Completed</p><p class="stat-value">—</p></div>
+      </div>
+
+      <div class="card mt-24">
+        <h2 style="font-size: 17px; margin-bottom: 16px;">Recent appointments</h2>
+        <div id="recent-appointments">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: BOOK APPOINTMENT -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-book" class="hidden">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Book a new appointment</h1>
+          <p style="margin-top: 4px;">Join a doctor's queue</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label for="doctor-select">Choose a doctor</label>
+          <select id="doctor-select">
+            <option value="">Loading doctors...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="reason">Reason for visit</label>
+          <select id="reason">
+            <option value="">Select a category...</option>
+            <option value="Routine checkup">Routine checkup</option>
+            <option value="Follow-up visit">Follow-up visit</option>
+            <option value="Fever / cold / cough">Fever / cold / cough</option>
+            <option value="Minor issue">Minor issue</option>
+            <option value="Major / urgent issue">Major / urgent issue</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="reason-detail">What exactly happened? <span style="font-weight: 400;">(describe your symptoms)</span></label>
+          <textarea id="reason-detail" placeholder="e.g. Fever since 2 days, mild headache, body ache in the mornings" required></textarea>
+        </div>
+
+        <div class="field">
+          <label>Past medical history <span style="font-weight: 400;">(select any that apply)</span></label>
+          <div style="display: flex; flex-direction: column; gap: 10px; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px;">
+
+            <div>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+                <input type="checkbox" class="history-check" data-label="Diabetes" onchange="toggleDetail(this, 'diabetes-detail')" style="width: auto;"> Diabetes
+              </label>
+              <input type="text" id="diabetes-detail" placeholder="Sugar level range (e.g. 140-160 mg/dL)" style="margin-top: 6px; display: none;">
+            </div>
+
+            <div>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+                <input type="checkbox" class="history-check" data-label="High blood pressure" onchange="toggleDetail(this, 'bp-detail')" style="width: auto;"> High blood pressure
+              </label>
+              <input type="text" id="bp-detail" placeholder="Usual BP range (e.g. 130/85)" style="margin-top: 6px; display: none;">
+            </div>
+
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Asthma" style="width: auto;"> Asthma
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Heart disease" style="width: auto;"> Heart disease
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Thyroid disorder" style="width: auto;"> Thyroid disorder
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Kidney disease" style="width: auto;"> Kidney disease
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Liver disease" style="width: auto;"> Liver disease
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Tuberculosis (TB)" style="width: auto;"> Tuberculosis (TB)
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Epilepsy / Seizures" style="width: auto;"> Epilepsy / Seizures
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Arthritis" style="width: auto;"> Arthritis
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+              <input type="checkbox" class="history-check" data-label="Cancer (past or current)" style="width: auto;"> Cancer (past or current)
+            </label>
+
+            <div>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+                <input type="checkbox" class="history-check" data-label="Allergies" onchange="toggleDetail(this, 'allergy-detail')" style="width: auto;"> Allergies
+              </label>
+              <input type="text" id="allergy-detail" placeholder="What are you allergic to?" style="margin-top: 6px; display: none;">
+            </div>
+
+            <div>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer;">
+                <input type="checkbox" class="history-check" data-label="Other" onchange="toggleDetail(this, 'other-condition-detail')" style="width: auto;"> Other condition not listed
+              </label>
+              <input type="text" id="other-condition-detail" placeholder="Please describe" style="margin-top: 6px; display: none;">
+            </div>
+
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="medications">Medicines you're currently taking <span style="font-weight: 400;">(optional)</span></label>
+          <textarea id="medications" placeholder="e.g. Metformin 500mg twice daily, Aspirin 75mg once daily"></textarea>
+        </div>
+
+        <button class="btn btn-primary" id="book-btn" onclick="bookAppointment()">Join the queue</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: MY RECORDS & REPORTS -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-records" class="hidden">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">My records &amp; reports</h1>
+          <p style="margin-top: 4px;">Full appointment history, prescriptions, and uploaded files</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="my-appointments">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  requireRoleOrRedirect('patient');
+  document.getElementById('patient-name').textContent = localStorage.getItem('name') || 'there';
+
+  // ─────────────────────────────────────────────
+  // Sidebar navigation
+  // ─────────────────────────────────────────────
+  function showSection(name) {
+    ['overview', 'book', 'records'].forEach(s => {
+      document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
+      document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
+    });
+  }
+
+  function showAlert(message, type = 'error') {
+    document.getElementById('alert-box').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    setTimeout(() => { document.getElementById('alert-box').innerHTML = ''; }, 4000);
+  }
+
+  function statusBadge(status) {
+    const labels = { waiting: 'Waiting', 'in-progress': 'In progress', completed: 'Completed' };
+    return `<span class="badge badge-${status}">${labels[status]}</span>`;
+  }
+
+  function toggleDetail(checkbox, detailId) {
+    document.getElementById(detailId).style.display = checkbox.checked ? 'block' : 'none';
+  }
+
+  async function loadDoctors() {
+    try {
+      const doctors = await apiRequest('/queue/doctors');
+      const select = document.getElementById('doctor-select');
+
+      if (doctors.length === 0) {
+        select.innerHTML = '<option value="">No doctors available yet</option>';
+        return;
+      }
+
+      select.innerHTML = doctors.map(doc => `
+        <option value="${doc._id}" ${doc.isQueuePaused ? 'disabled' : ''}>
+          Dr. ${doc.name}${doc.specialization ? ' — ' + doc.specialization : ''}${doc.isQueuePaused ? ' (not accepting patients right now)' : ''}
+        </option>
+      `).join('');
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  function renderPrescription(appt) {
+    const rx = appt.prescription;
+    const hasContent = rx && (rx.diagnosis || (rx.medicines && rx.medicines.length) || (rx.investigations && rx.investigations.length) || rx.advice);
+    if (!hasContent && !appt.followUpDate) return '';
+
+    let html = `<div style="margin-top: 10px; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px;">`;
+
+    if (rx?.diagnosis) {
+      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700;">DIAGNOSIS</p>
+                <p style="color: var(--text); margin-top: 2px; margin-bottom: 10px;">${rx.diagnosis}</p>`;
+    }
+
+    if (rx?.medicines && rx.medicines.length > 0) {
+      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">MEDICINES</p>`;
+      rx.medicines.forEach(med => {
+        const times = [med.morning && 'Morning', med.afternoon && 'Afternoon', med.evening && 'Evening'].filter(Boolean).join(', ') || 'As directed';
+        const food = med.foodTiming === 'before' ? 'Before food' : med.foodTiming === 'after' ? 'After food' : '';
+        const duration = med.durationDays ? `for ${med.durationDays} day${med.durationDays === 1 ? '' : 's'}` : '';
+        html += `<p style="color: var(--text); font-size: 14px; margin-bottom: 4px;">
+                    <strong>${med.name}</strong> — ${times}${food ? ' · ' + food : ''}${duration ? ' · ' + duration : ''}
+                  </p>`;
+      });
+    }
+
+    if (rx?.investigations && rx.investigations.length > 0) {
+      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin: 10px 0 6px;">INVESTIGATIONS ADVISED</p>`;
+      rx.investigations.forEach(inv => {
+        html += `<p style="color: var(--text); font-size: 14px; margin-bottom: 4px;">
+                    <strong>${inv.name}</strong>${inv.note ? ' — ' + inv.note : ''}
+                  </p>`;
+      });
+    }
+
+    if (rx?.advice) {
+      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin: 10px 0 4px;">ADVICE</p>
+                <p style="color: var(--text); font-size: 14px; white-space: pre-line;">${rx.advice}</p>`;
+    }
+
+    if (appt.followUpDate) {
+      const followUp = new Date(appt.followUpDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      html += `<p style="font-size: 13px; color: var(--text); font-weight: 700; margin-top: 10px;">Next follow-up: ${followUp}</p>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  // NOTE: this same card can be rendered twice for one appointment — once in the
+  // "Recent appointments" list on Overview, and again in the full "My records"
+  // list. Because of that, the upload inputs below intentionally have NO id
+  // (duplicate ids in the DOM are invalid and make getElementById unreliable —
+  // it silently returns whichever copy comes first, which broke uploads before).
+  // Instead they're found via the "upload-card" class, scoped to the button
+  // that was actually clicked (see uploadReport()).
+  function appointmentCardHTML(appt) {
+    return `
+      <div style="padding: 14px 0; border-bottom: 1px solid var(--border);">
+        <div class="flex-between">
+          <div>
+            <p style="color: var(--text); font-weight: 700;">Dr. ${appt.doctor?.name || 'Unknown'}</p>
+            <p style="font-size: 13px; margin-top: 2px;">Token #${appt.tokenNumber} · ${appt.reasonForVisit}</p>
+          </div>
+          ${statusBadge(appt.status)}
+        </div>
+        ${appt.status === 'waiting' ? `
+          <div style="margin-top: 10px; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px;">
+            <p style="font-size: 13px;">
+              ${appt.patientsAhead} patient${appt.patientsAhead === 1 ? '' : 's'} ahead of you
+            </p>
+            <p style="font-size: 13px; color: var(--text); font-weight: 700; margin-top: 2px;">
+              Estimated wait: ~${appt.estimatedWaitMinutes} minutes
+            </p>
+          </div>
+        ` : ''}
+        ${renderPrescription(appt)}
+
+        ${appt.reports && appt.reports.length > 0 ? `
+          <div style="margin-top: 10px;">
+            <p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">YOUR UPLOADED REPORTS</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${appt.reports.map(r => `
+                <a href="${SERVER_ORIGIN}${r.url}" target="_blank">
+                  <img src="${SERVER_ORIGIN}${r.url}" alt="Report" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);">
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${appt.status !== 'completed' ? `
+          <div class="upload-card" data-appt-id="${appt._id}" style="margin-top: 12px; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Upload a report (photo or file)</label>
+            <input type="file" class="report-file-input" accept="image/*" capture="environment" multiple style="width: 100%; margin-bottom: 8px; color: var(--text); font-size: 13px;">
+            <input type="text" class="report-desc-input" placeholder="Any notes about this report (optional)" style="width: 100%; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 13px;">
+            <button type="button" class="btn btn-secondary btn-inline" onclick="uploadReport('${appt._id}', this)">Upload</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  let cachedAppointments = [];
+
+  async function loadMyAppointments() {
+    try {
+      const appointments = await apiRequest('/queue/my-appointments');
+      cachedAppointments = appointments;
+
+      // Full history — records section
+      const recordsContainer = document.getElementById('my-appointments');
+      recordsContainer.innerHTML = appointments.length === 0
+        ? '<p>You haven\'t booked any appointments yet.</p>'
+        : appointments.map(appointmentCardHTML).join('');
+
+      // Recent 3 — overview section
+      const recentContainer = document.getElementById('recent-appointments');
+      recentContainer.innerHTML = appointments.length === 0
+        ? '<p>You haven\'t booked any appointments yet.</p>'
+        : appointments.slice(0, 3).map(appointmentCardHTML).join('');
+
+      // Stats
+      const total = appointments.length;
+      const waiting = appointments.filter(a => a.status === 'waiting').length;
+      const inProgress = appointments.filter(a => a.status === 'in-progress').length;
+      const completed = appointments.filter(a => a.status === 'completed').length;
+
+      document.getElementById('patient-stats').innerHTML = `
+        <div class="stat-card"><p class="stat-label">Total visits</p><p class="stat-value">${total}</p></div>
+        <div class="stat-card"><p class="stat-label">Waiting</p><p class="stat-value">${waiting}</p></div>
+        <div class="stat-card"><p class="stat-label">In progress</p><p class="stat-value">${inProgress}</p></div>
+        <div class="stat-card"><p class="stat-label">Completed</p><p class="stat-value">${completed}</p></div>
+      `;
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  // btnEl = the exact button that was clicked, so we can scope the lookup to
+  // its own card. This is what makes uploads work correctly even when the
+  // same appointment's card exists twice in the DOM (Overview + Records).
+  async function uploadReport(apptId, btnEl) {
+    const card = btnEl.closest('.upload-card');
+    const fileInput = card.querySelector('.report-file-input');
+    const description = card.querySelector('.report-desc-input').value.trim();
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+      return showAlert('Please choose a photo or file first.');
+    }
+
+    const formData = new FormData();
+    for (const file of fileInput.files) formData.append('reports', file);
+    formData.append('description', description);
+
+    btnEl.disabled = true;
+    btnEl.textContent = 'Uploading...';
+
+    try {
+      await apiUpload(`/queue/${apptId}/upload-report`, formData);
+      showAlert('Report uploaded', 'success');
+      loadMyAppointments();
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      btnEl.disabled = false;
+      btnEl.textContent = 'Upload';
+    }
+  }
+
+  function buildPastHistory() {
+    const parts = [];
+    document.querySelectorAll('.history-check').forEach(cb => {
+      if (!cb.checked) return;
+      const label = cb.dataset.label;
+      if (label === 'Diabetes') {
+        const detail = document.getElementById('diabetes-detail').value.trim();
+        parts.push(detail ? `Diabetes (${detail})` : 'Diabetes');
+      } else if (label === 'High blood pressure') {
+        const detail = document.getElementById('bp-detail').value.trim();
+        parts.push(detail ? `High blood pressure (${detail})` : 'High blood pressure');
+      } else if (label === 'Allergies') {
+        const detail = document.getElementById('allergy-detail').value.trim();
+        parts.push(detail ? `Allergies (${detail})` : 'Allergies');
+      } else if (label === 'Other') {
+        const detail = document.getElementById('other-condition-detail').value.trim();
+        if (detail) parts.push(detail);
+      } else {
+        parts.push(label);
+      }
+    });
+    return parts.join(', ') || 'None reported';
+  }
+
+  function resetForm() {
+    document.getElementById('reason').value = '';
+    document.getElementById('reason-detail').value = '';
+    document.getElementById('medications').value = '';
+    document.querySelectorAll('.history-check').forEach(cb => cb.checked = false);
+    ['diabetes-detail', 'bp-detail', 'allergy-detail', 'other-condition-detail'].forEach(id => {
+      document.getElementById(id).value = '';
+      document.getElementById(id).style.display = 'none';
+    });
+  }
+
+  async function bookAppointment() {
+    const doctorId = document.getElementById('doctor-select').value;
+    const reasonCategory = document.getElementById('reason').value;
+    const reasonDetail = document.getElementById('reason-detail').value.trim();
+    const medications = document.getElementById('medications').value.trim();
+    const pastHistory = buildPastHistory();
+    const btn = document.getElementById('book-btn');
+
+    if (!doctorId) return showAlert('Please choose a doctor.');
+    if (!reasonCategory) return showAlert('Please select a reason category.');
+    if (!reasonDetail) return showAlert('Please describe what exactly happened.');
+
+    const reasonForVisit = `${reasonCategory} — ${reasonDetail}`;
+
+    btn.disabled = true;
+    btn.textContent = 'Joining queue...';
+
+    try {
+      const result = await apiRequest('/queue/book', {
+        method: 'POST',
+        body: { doctorId, reasonForVisit, pastHistory, currentMedications: medications },
+      });
+      showAlert(`You're in the queue — your token number is ${result.tokenNumber}`, 'success');
+      resetForm();
+      loadMyAppointments();
+      showSection('overview');
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Join the queue';
+    }
+  }
+
+  loadDoctors();
+  loadMyAppointments();
+
+  // Auto-refresh every 12 seconds so patient sees doctor's updates without manual reload
+  setInterval(loadMyAppointments, 12000);
+</script>
+
+</body>
+</html>

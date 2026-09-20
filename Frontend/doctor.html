@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doctor Dashboard — Clinic Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div style="padding: 10px 14px 24px;">
+      <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">CarePulse</p>
+      <h2 style="font-size: 17px; margin-top: 4px;">Dr. <span id="doctor-name">there</span></h2>
+    </div>
+    <div class="nav-link active" onclick="showSection('overview')" id="nav-overview">📊 Overview</div>
+    <div class="nav-link" onclick="showSection('queue')" id="nav-queue">🩺 My queue</div>
+    <div style="flex: 1;"></div>
+    <div class="nav-link" onclick="logout()">🚪 Log out</div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <div id="alert-box"></div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: OVERVIEW -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-overview">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Overview</h1>
+          <p style="margin-top: 4px;">How many patients you've seen, at a glance</p>
+        </div>
+        <button class="btn btn-secondary btn-inline" onclick="loadStats()">🔄 Refresh</button>
+      </div>
+
+      <div class="stats-grid" id="doctor-stats">
+        <div class="stat-card"><p class="stat-label">Today</p><p class="stat-value">—</p></div>
+        <div class="stat-card"><p class="stat-label">This week</p><p class="stat-value">—</p></div>
+        <div class="stat-card"><p class="stat-label">This month</p><p class="stat-value">—</p></div>
+        <div class="stat-card"><p class="stat-label">This year</p><p class="stat-value">—</p></div>
+        <div class="stat-card"><p class="stat-label">All-time total</p><p class="stat-value">—</p></div>
+      </div>
+
+      <div class="card mt-24">
+        <h2 style="font-size: 17px; margin-bottom: 8px;">Last 7 days</h2>
+        <p style="font-size: 13px; margin-bottom: 8px;">Number of patients booked with you each day</p>
+        <div class="mini-chart" id="week-chart"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: MY QUEUE -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-queue" class="hidden">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Today's Queue</h1>
+          <p style="margin-top: 4px;">Today's patients, in order</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary btn-inline" onclick="loadQueue()">🔄 Refresh</button>
+          <button class="btn btn-secondary btn-inline" id="pause-btn" onclick="togglePause()">Pause queue</button>
+        </div>
+      </div>
+
+      <div class="card flex-between" style="margin-bottom: 20px;">
+        <div>
+          <p style="font-size: 13px;">Up next</p>
+          <h2 id="waiting-count" style="font-size: 28px; margin-top: 2px;">0 waiting</h2>
+        </div>
+        <button class="btn btn-primary" style="width: auto; padding: 13px 24px;" onclick="callNext()">Call next patient</button>
+      </div>
+
+      <div id="queue-list">
+        <p>Loading queue...</p>
+      </div>
+
+      <datalist id="investigation-options">
+        <option value="CBC (Complete Blood Count)">
+        <option value="LFT (Liver Function Test)">
+        <option value="KFT (Kidney Function Test)">
+        <option value="Lipid Profile">
+        <option value="Thyroid Profile (TSH, T3, T4)">
+        <option value="Blood Sugar Fasting">
+        <option value="Blood Sugar PP">
+        <option value="HbA1c">
+        <option value="Urine Routine">
+        <option value="X-Ray Chest">
+        <option value="USG Abdomen">
+        <option value="USG Pelvis">
+        <option value="CT Scan Brain">
+        <option value="CT Scan Chest">
+        <option value="MRI Brain">
+        <option value="MRI Spine">
+        <option value="MRI Pelvis">
+        <option value="MRI Knee">
+        <option value="ECG">
+        <option value="ECHO">
+        <option value="PET-CT">
+        <option value="Stress Test (TMT)">
+        <option value="Vitamin D">
+        <option value="Vitamin B12">
+        <option value="Iron Studies">
+        <option value="Widal Test">
+        <option value="Dengue NS1/IgG/IgM">
+        <option value="Malaria Test">
+        <option value="COVID RT-PCR">
+        <option value="Biopsy">
+        <option value="Endoscopy">
+        <option value="Colonoscopy">
+        <option value="Bone Density (DEXA)">
+        <option value="Mammography">
+        <option value="Pap Smear">
+        <option value="Stool Routine">
+        <option value="Culture & Sensitivity">
+      </datalist>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  requireRoleOrRedirect('doctor');
+  document.getElementById('doctor-name').textContent = (localStorage.getItem('name') || 'there').replace(/^Dr\.?\s*/i, '');
+
+  // ─────────────────────────────────────────────
+  // Sidebar navigation
+  // ─────────────────────────────────────────────
+  function showSection(name) {
+    ['overview', 'queue'].forEach(s => {
+      document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
+      document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
+    });
+    if (name === 'queue') loadQueue();
+    if (name === 'overview') loadStats();
+  }
+
+  function showAlert(message, type = 'error') {
+    document.getElementById('alert-box').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    setTimeout(() => { document.getElementById('alert-box').innerHTML = ''; }, 4000);
+  }
+
+  function statusBadge(status) {
+    const labels = { waiting: 'Waiting', 'in-progress': 'In progress', completed: 'Completed' };
+    return `<span class="badge badge-${status}">${labels[status]}</span>`;
+  }
+
+  // ─────────────────────────────────────────────
+  // Overview stats
+  // ─────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const stats = await apiRequest('/queue/my-stats');
+
+      document.getElementById('doctor-stats').innerHTML = `
+        <div class="stat-card"><p class="stat-label">Today</p><p class="stat-value">${stats.today}</p></div>
+        <div class="stat-card"><p class="stat-label">This week</p><p class="stat-value">${stats.thisWeek}</p></div>
+        <div class="stat-card"><p class="stat-label">This month</p><p class="stat-value">${stats.thisMonth}</p></div>
+        <div class="stat-card"><p class="stat-label">This year</p><p class="stat-value">${stats.thisYear}</p></div>
+        <div class="stat-card"><p class="stat-label">All-time total</p><p class="stat-value">${stats.totalAllTime}</p></div>
+      `;
+
+      const maxCount = Math.max(...stats.last7Days.map(d => d.count), 1);
+      document.getElementById('week-chart').innerHTML = stats.last7Days.map(d => `
+        <div class="bar-col">
+          <div class="bar" style="height: ${(d.count / maxCount) * 100}%;" title="${d.count} patients"></div>
+          <p class="bar-label">${d.label}</p>
+        </div>
+      `).join('');
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Prescription builder — tap-based medicine rows
+  // ─────────────────────────────────────────────
+  function medicineRowHTML(med = {}) {
+    return `
+      <div class="med-row" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; margin-bottom: 8px;">
+        <input type="text" class="med-name" placeholder="Medicine name" value="${med.name || ''}"
+          style="flex: 1; min-width: 150px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 14px;">
+
+        <button type="button" class="time-pill ${med.morning ? 'active' : ''}" data-time="morning" onclick="this.classList.toggle('active')">Morning</button>
+        <button type="button" class="time-pill ${med.afternoon ? 'active' : ''}" data-time="afternoon" onclick="this.classList.toggle('active')">Afternoon</button>
+        <button type="button" class="time-pill ${med.evening ? 'active' : ''}" data-time="evening" onclick="this.classList.toggle('active')">Evening</button>
+
+        <button type="button" class="time-pill food-pill ${med.foodTiming === 'before' ? 'active' : ''}" data-food="before" onclick="toggleFoodTiming(this)">Before food</button>
+        <button type="button" class="time-pill food-pill ${med.foodTiming === 'after' ? 'active' : ''}" data-food="after" onclick="toggleFoodTiming(this)">After food</button>
+
+        <input type="number" class="med-duration" placeholder="Days" min="1" value="${med.durationDays || ''}"
+          style="width: 70px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 13px;">
+
+        <button type="button" class="btn-danger btn-inline" style="padding: 6px 10px;" onclick="this.closest('.med-row').remove()">✕</button>
+      </div>
+    `;
+  }
+
+  function toggleFoodTiming(btn) {
+    const wasActive = btn.classList.contains('active');
+    btn.closest('.med-row').querySelectorAll('.food-pill').forEach(b => b.classList.remove('active'));
+    if (!wasActive) btn.classList.add('active');
+  }
+
+  function addMedicineRow(apptId, med) {
+    document.getElementById(`meds-${apptId}`).insertAdjacentHTML('beforeend', medicineRowHTML(med || {}));
+  }
+
+  function collectMedicines(apptId) {
+    const rows = document.getElementById(`meds-${apptId}`).querySelectorAll('.med-row');
+    const medicines = [];
+    rows.forEach(row => {
+      const name = row.querySelector('.med-name').value.trim();
+      if (!name) return;
+      const foodBtn = row.querySelector('.food-pill.active');
+      medicines.push({
+        name,
+        morning: row.querySelector('[data-time="morning"]').classList.contains('active'),
+        afternoon: row.querySelector('[data-time="afternoon"]').classList.contains('active'),
+        evening: row.querySelector('[data-time="evening"]').classList.contains('active'),
+        foodTiming: foodBtn ? foodBtn.dataset.food : '',
+        durationDays: parseInt(row.querySelector('.med-duration').value) || null,
+      });
+    });
+    return medicines;
+  }
+
+  // ─────────────────────────────────────────────
+  // Investigations builder
+  // ─────────────────────────────────────────────
+  function investigationRowHTML(inv = {}) {
+    return `
+      <div class="inv-row" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; margin-bottom: 8px;">
+        <input type="text" class="inv-name" list="investigation-options" placeholder="Search investigation (e.g. MRI, CBC)" value="${inv.name || ''}"
+          style="flex: 1; min-width: 160px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 14px;">
+        <input type="text" class="inv-note" placeholder="Note (e.g. with contrast)" value="${inv.note || ''}"
+          style="flex: 1; min-width: 160px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 13px;">
+        <button type="button" class="btn-danger btn-inline" style="padding: 6px 10px;" onclick="this.closest('.inv-row').remove()">✕</button>
+      </div>
+    `;
+  }
+
+  function addInvestigationRow(apptId, inv) {
+    document.getElementById(`invs-${apptId}`).insertAdjacentHTML('beforeend', investigationRowHTML(inv || {}));
+  }
+
+  function collectInvestigations(apptId) {
+    const rows = document.getElementById(`invs-${apptId}`).querySelectorAll('.inv-row');
+    const investigations = [];
+    rows.forEach(row => {
+      const name = row.querySelector('.inv-name').value.trim();
+      if (!name) return;
+      investigations.push({ name, note: row.querySelector('.inv-note').value.trim() });
+    });
+    return investigations;
+  }
+
+  // ─────────────────────────────────────────────
+  // Follow-up date
+  // ─────────────────────────────────────────────
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function setFollowUp(apptId, days, btn) {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    const iso = date.toISOString().slice(0, 10);
+
+    document.getElementById(`followup-${apptId}`).value = iso;
+    document.getElementById(`followup-display-${apptId}`).textContent = `Next follow-up: ${formatDate(iso)}`;
+    document.getElementById(`followup-custom-${apptId}`).value = '';
+    document.getElementById(`followup-pills-${apptId}`).querySelectorAll('.time-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function setCustomFollowUp(apptId, value) {
+    if (!value) return;
+    document.getElementById(`followup-${apptId}`).value = value;
+    document.getElementById(`followup-display-${apptId}`).textContent = `Next follow-up: ${formatDate(value)}`;
+    document.getElementById(`followup-pills-${apptId}`).querySelectorAll('.time-pill').forEach(b => b.classList.remove('active'));
+  }
+
+  // ─────────────────────────────────────────────
+  // Queue rendering
+  // ─────────────────────────────────────────────
+  async function loadQueue() {
+    try {
+      const queue = await apiRequest('/queue/my-queue');
+      const container = document.getElementById('queue-list');
+
+      const waitingCount = queue.filter(a => a.status === 'waiting').length;
+      document.getElementById('waiting-count').textContent = `${waitingCount} waiting`;
+
+      if (queue.length === 0) {
+        container.innerHTML = '<div class="card"><p>No patients in your queue right now.</p></div>';
+        return;
+      }
+
+      container.innerHTML = queue.map(appt => `
+        <div class="card">
+          <div class="flex-between" style="align-items: flex-start;">
+            <div>
+              <h3 style="font-size: 16px;">Token #${appt.tokenNumber} — ${appt.patient?.name || 'Unknown patient'}</h3>
+              <p style="font-size: 13px; margin-top: 4px;">${appt.patient?.email || ''}</p>
+            </div>
+            ${statusBadge(appt.status)}
+          </div>
+
+          <div class="mt-24">
+            <p style="font-size: 13px; color: var(--text-muted); font-weight: 600;">REASON FOR VISIT</p>
+            <p style="color: var(--text); margin-top: 4px;">${appt.reasonForVisit}</p>
+          </div>
+
+          ${appt.pastHistory ? `
+            <div class="mt-24">
+              <p style="font-size: 13px; color: var(--text-muted); font-weight: 600;">PAST HISTORY</p>
+              <p style="color: var(--text); margin-top: 4px;">${appt.pastHistory}</p>
+            </div>
+          ` : ''}
+
+          ${appt.currentMedications ? `
+            <div class="mt-24">
+              <p style="font-size: 13px; color: var(--text-muted); font-weight: 600;">CURRENT MEDICATIONS</p>
+              <p style="color: var(--text); margin-top: 4px;">${appt.currentMedications}</p>
+            </div>
+          ` : ''}
+
+          ${appt.reports && appt.reports.length > 0 ? `
+            <div class="mt-24">
+              <p style="font-size: 13px; color: var(--text-muted); font-weight: 600;">UPLOADED REPORTS</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+                ${appt.reports.map(r => `
+                  <a href="${SERVER_ORIGIN}${r.url}" target="_blank" style="display: block;">
+                    <img src="${SERVER_ORIGIN}${r.url}" alt="Report" style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);">
+                  </a>
+                `).join('')}
+              </div>
+              ${appt.reports.some(r => r.description) ? `<p style="font-size: 13px; margin-top: 8px;">${appt.reports.map(r => r.description).filter(Boolean).join(' · ')}</p>` : ''}
+            </div>
+          ` : ''}
+
+          <div class="mt-24">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Diagnosis — what exactly is wrong</label>
+            <input type="text" id="diagnosis-${appt._id}" placeholder="e.g. Viral fever with mild dehydration"
+              value="${appt.prescription?.diagnosis || ''}"
+              style="width: 100%; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; color: var(--text); font-family: inherit; font-size: 15px;">
+          </div>
+
+          <div class="mt-24">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Prescription</label>
+            <div id="meds-${appt._id}"></div>
+            <button class="btn btn-secondary btn-inline" onclick="addMedicineRow('${appt._id}')">+ Add medicine</button>
+          </div>
+
+          <div class="mt-24">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Investigations</label>
+            <div id="invs-${appt._id}"></div>
+            <button class="btn btn-secondary btn-inline" onclick="addInvestigationRow('${appt._id}')">+ Add investigation</button>
+          </div>
+
+          <div class="mt-24">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Advice / Instructions</label>
+            <textarea id="advice-${appt._id}" placeholder="Precautions, procedure instructions, general advice..." style="min-height: 90px;">${appt.prescription?.advice || ''}</textarea>
+          </div>
+
+          <div class="mt-24">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Next follow-up</label>
+            <div id="followup-pills-${appt._id}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <button type="button" class="time-pill" onclick="setFollowUp('${appt._id}', 7, this)">1 week</button>
+              <button type="button" class="time-pill" onclick="setFollowUp('${appt._id}', 30, this)">1 month</button>
+              <button type="button" class="time-pill" onclick="setFollowUp('${appt._id}', 90, this)">3 months</button>
+              <button type="button" class="time-pill" onclick="setFollowUp('${appt._id}', 180, this)">6 months</button>
+              <button type="button" class="time-pill" onclick="setFollowUp('${appt._id}', 365, this)">1 year</button>
+              <input type="date" id="followup-custom-${appt._id}" onchange="setCustomFollowUp('${appt._id}', this.value)"
+                style="background: var(--surface-input); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; color: var(--text); font-family: inherit; font-size: 12px;">
+            </div>
+            <input type="hidden" id="followup-${appt._id}" value="${appt.followUpDate ? new Date(appt.followUpDate).toISOString().slice(0,10) : ''}">
+            <p id="followup-display-${appt._id}" style="font-size: 13px; color: var(--text); font-weight: 700; margin-top: 8px;">${appt.followUpDate ? 'Next follow-up: ' + formatDate(appt.followUpDate) : ''}</p>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-inline" onclick="savePrescription('${appt._id}')">Save &amp; send to patient</button>
+            ${appt.status === 'waiting' ? `<button class="btn btn-secondary btn-inline" onclick="updateStatus('${appt._id}', 'in-progress')">Start checkup</button>` : ''}
+            ${appt.status === 'in-progress' ? `<button class="btn btn-secondary btn-inline" onclick="updateStatus('${appt._id}', 'completed')">Mark completed</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      queue.forEach(appt => {
+        const existingMeds = appt.prescription?.medicines || [];
+        existingMeds.length > 0 ? existingMeds.forEach(med => addMedicineRow(appt._id, med)) : addMedicineRow(appt._id);
+
+        const existingInvs = appt.prescription?.investigations || [];
+        existingInvs.length > 0 ? existingInvs.forEach(inv => addInvestigationRow(appt._id, inv)) : addInvestigationRow(appt._id);
+      });
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      await apiRequest(`/queue/${id}/status`, { method: 'PUT', body: { status } });
+      showAlert(status === 'completed' ? 'Marked as completed' : 'Checkup started', 'success');
+      loadQueue();
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  async function savePrescription(id) {
+    const diagnosis = document.getElementById(`diagnosis-${id}`).value.trim();
+    const medicines = collectMedicines(id);
+    const investigations = collectInvestigations(id);
+    const advice = document.getElementById(`advice-${id}`).value.trim();
+    const followUpDate = document.getElementById(`followup-${id}`).value || null;
+
+    try {
+      await apiRequest(`/queue/${id}/prescription`, {
+        method: 'PUT',
+        body: { diagnosis, medicines, investigations, advice, followUpDate },
+      });
+      showAlert('Prescription saved — the patient can see it now', 'success');
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  async function callNext() {
+    try {
+      const result = await apiRequest('/queue/call-next', { method: 'PUT' });
+      showAlert(`Now seeing token #${result.appointment.tokenNumber} — ${result.appointment.patient?.name}`, 'success');
+      loadQueue();
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  async function togglePause() {
+    try {
+      const result = await apiRequest('/queue/pause-toggle', { method: 'PUT' });
+      const btn = document.getElementById('pause-btn');
+      btn.textContent = result.isQueuePaused ? 'Resume queue' : 'Pause queue';
+      showAlert(result.isQueuePaused ? 'Queue paused — patients can\'t book new visits' : 'Queue resumed', 'success');
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  loadStats();
+</script>
+
+</body>
+</html>

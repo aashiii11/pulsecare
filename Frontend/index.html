@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — CarePulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .auth-shell { min-height: 100vh; display: flex; }
+
+  .auth-illustration {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+    padding: 56px;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+  .auth-illustration::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    width: 620px;
+    height: 620px;
+    transform: translateY(-50%);
+    background: radial-gradient(circle, rgba(139, 124, 246, 0.16) 0%, rgba(76, 175, 125, 0.08) 40%, transparent 72%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .auth-illustration > * { position: relative; z-index: 1; }
+
+  /* Floating background particles — small dots drifting slowly upward */
+  .auth-particle {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+    animation: auth-particle-float linear infinite;
+  }
+  @keyframes auth-particle-float {
+    from { transform: translateY(0) translateX(0); opacity: 0; }
+    10%  { opacity: 0.3; }
+    90%  { opacity: 0.15; }
+    to   { transform: translateY(-420px) translateX(20px); opacity: 0; }
+  }
+
+  .auth-brand-row { display: flex; align-items: center; gap: 10px; }
+  .auth-brand-name { font-size: 15px; font-weight: 700; letter-spacing: 0.2px; color: var(--text); }
+  .auth-mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: var(--surface-hover); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .auth-headline { margin-top: 4px; }
+  .auth-headline h1 { font-size: 32px; line-height: 1.18; max-width: 420px; letter-spacing: -0.4px; }
+  .auth-headline p { margin-top: 10px; }
+
+  /* Rotating sub-tagline — typewriter effect */
+  .auth-rotating {
+    margin-top: 14px;
+    min-height: 22px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+  }
+  .auth-rotating .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 15px;
+    background: var(--accent);
+    margin-left: 3px;
+    animation: auth-blink 0.9s steps(1) infinite;
+  }
+  @keyframes auth-blink { 50% { opacity: 0; } }
+
+  /* Floating live-queue widget card */
+  .auth-live-card {
+    position: absolute;
+    top: 14%;
+    right: 8%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 16px 40px -12px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: auth-bob 4s ease-in-out infinite;
+    z-index: 1;
+  }
+  .auth-live-card .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success); flex-shrink: 0;
+    box-shadow: 0 0 0 0 rgba(76,175,125,0.6);
+    animation: auth-pulse-dot 1.8s ease-out infinite;
+  }
+  @keyframes auth-pulse-dot {
+    0% { box-shadow: 0 0 0 0 rgba(76,175,125,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(76,175,125,0); }
+    100% { box-shadow: 0 0 0 0 rgba(76,175,125,0); }
+  }
+  .auth-live-card .line1 { font-size: 12px; font-weight: 700; color: var(--text); }
+  .auth-live-card .line2 { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  @keyframes auth-bob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(-1deg); }
+  }
+
+  .auth-pulse { position: relative; width: 100%; height: 40px; overflow: hidden; }
+  .auth-pulse svg { display: block; width: 100%; height: 100%; }
+  .auth-pulse-track { animation: auth-pulse-scroll 3.5s linear infinite; }
+  @keyframes auth-pulse-scroll { from { transform: translateX(0); } to { transform: translateX(-140px); } }
+
+  .auth-badges { display: flex; flex-direction: column; gap: 18px; }
+  .auth-badge { display: flex; align-items: center; gap: 12px; transition: transform 0.2s ease; }
+  .auth-badge:hover { transform: translateX(2px); }
+  .auth-badge .dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--surface-hover); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: box-shadow 0.2s ease;
+  }
+  .auth-badge:hover .dot { box-shadow: 0 0 0 4px rgba(139,124,246,0.15); }
+  .auth-badge span { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  .auth-brand-row, .auth-headline, .auth-pulse, .auth-badges { animation: auth-fade-up 0.6s ease both; }
+  .auth-brand-row { animation-delay: 0.05s; }
+  .auth-headline  { animation-delay: 0.15s; }
+  .auth-pulse     { animation-delay: 0.3s; }
+  .auth-badges    { animation-delay: 0.42s; }
+  @keyframes auth-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .auth-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .auth-panel .card {
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,0.55), 0 0 0 1px var(--border), 0 0 40px -12px rgba(139,124,246,0.18);
+    animation: auth-fade-up 0.5s ease 0.1s both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .auth-panel .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 28px 70px -18px rgba(0,0,0,0.6), 0 0 0 1px var(--border), 0 0 50px -10px rgba(139,124,246,0.26);
+  }
+
+  /* Input wrapper — icon on the left, optional eye toggle on the right */
+  .input-wrap { position: relative; }
+  .input-wrap input { padding-left: 40px; }
+  .input-wrap.has-toggle input { padding-right: 42px; }
+  .input-wrap .input-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); pointer-events: none; display: flex;
+  }
+  .input-wrap .eye-toggle {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; padding: 4px;
+    color: var(--text-muted); display: flex; width: auto;
+  }
+  .input-wrap .eye-toggle:hover { color: var(--text); }
+
+  .auth-panel input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,124,246,0.18); }
+
+  .auth-panel .btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #34d1a0 150%);
+    border: none; transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .auth-panel .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(139,124,246,0.5); }
+
+  /* Button loading spinner */
+  .btn-spinner {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+    animation: auth-spin 0.7s linear infinite; display: none;
+  }
+  .btn-spinner.show { display: inline-block; }
+  @keyframes auth-spin { to { transform: rotate(360deg); } }
+
+  /* Sliding indicator behind the segmented tabs */
+  .segmented { position: relative; }
+  .segmented .slider {
+    position: absolute; top: 4px; left: 4px; bottom: 4px;
+    width: calc(50% - 4px); border-radius: 999px;
+    background: var(--accent);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+  }
+  .segmented button { position: relative; z-index: 1; background: transparent !important; }
+  .segmented button.active { color: var(--accent-text) !important; }
+
+  /* Alert slide-in */
+  #alert-box .alert { animation: auth-alert-in 0.28s ease both; }
+  @keyframes auth-alert-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .auth-link { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; background: none; border: none; cursor: pointer; padding: 0; }
+  .auth-link:hover { text-decoration: underline; }
+  .auth-forgot-row { text-align: right; margin: -8px 0 16px; }
+  #forgot-panel p.auth-forgot-copy { font-size: 13px; margin-bottom: 16px; color: var(--text-muted); }
+
+  .auth-mobile-heading { display: none; text-align: center; margin-bottom: 28px; }
+  .auth-mobile-heading .auth-mobile-mark {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--surface-hover); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+  }
+  .auth-mobile-heading h1 { font-size: 24px; letter-spacing: -0.3px; }
+  .auth-mobile-heading p { margin-top: 6px; }
+  .auth-mobile-heading .auth-mobile-tags { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .auth-mobile-heading .auth-mobile-tag {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    background: var(--surface-hover); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 12px;
+  }
+
+  @media (max-width: 900px) {
+    .auth-illustration { display: none; }
+    .auth-mobile-heading { display: block; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .auth-pulse-track, .auth-particle, .auth-live-card, .auth-live-card .live-dot,
+    .auth-brand-row, .auth-headline, .auth-pulse, .auth-badges, .auth-panel .card, .cursor { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-shell">
+
+  <!-- ───────────────────────────────── -->
+  <!-- LEFT — brand / illustration panel -->
+  <!-- ───────────────────────────────── -->
+  <div class="auth-illustration" id="illustration">
+    <div>
+      <div class="auth-brand-row">
+        <div class="auth-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <rect x="10" y="3" width="4" height="18" rx="1.5" fill="var(--accent)"/>
+            <rect x="3" y="10" width="18" height="4" rx="1.5" fill="var(--accent)"/>
+          </svg>
+        </div>
+        <span class="auth-brand-name">CarePulse</span>
+      </div>
+      <div class="auth-headline">
+        <h1>Care that doesn't keep you waiting.</h1>
+        <p>Book appointments, track your queue position, and manage every visit — all in one place.</p>
+        <div class="auth-rotating"><span id="rotating-text"></span><span class="cursor"></span></div>
+      </div>
+    </div>
+
+    <!-- Floating live-queue widget -->
+    <div class="auth-live-card">
+      <span class="live-dot"></span>
+      <div>
+        <div class="line1">Token #12 · Dr. Sharma</div>
+        <div class="line2">Now serving · 2 ahead of you</div>
+      </div>
+    </div>
+
+    <div class="auth-pulse">
+      <svg viewBox="0 0 560 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="authPulseGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#34d1a0"/>
+            <stop offset="100%" stop-color="#8b7cf6"/>
+          </linearGradient>
+        </defs>
+        <g class="auth-pulse-track">
+          <polyline points="0,20 40,20 50,4 60,36 70,20 140,20 180,20 190,4 200,36 210,20 280,20 320,20 330,4 340,36 350,20 420,20 460,20 470,4 480,36 490,20 560,20"
+            fill="none" stroke="url(#authPulseGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="auth-badges">
+      <div class="auth-badge">
+        <div class="dot"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 L12 12 L18 15" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="var(--accent)" stroke-width="2"/></svg></div>
+        <span>Live queue tracking</span>
+      </div>
+      <div class="auth-badge">
+        <div class="dot"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/><path d="M9 12 L11 14 L15.5 9" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span>Doctor-verified visits</span>
+      </div>
+      <div class="auth-badge">
+        <div class="dot"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="var(--accent)" stroke-width="2"/><path d="M8 10 V7 a4 4 0 0 1 8 0 V10" stroke="var(--accent)" stroke-width="2"/></svg></div>
+        <span>Private, secure records</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────── -->
+  <!-- RIGHT — the actual sign-in card -->
+  <!-- ───────────────────────────────── -->
+  <div class="auth-panel">
+    <div style="width: 100%; max-width: 400px;">
+
+      <div class="auth-mobile-heading">
+        <div class="auth-mobile-mark">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <rect x="10" y="3" width="4" height="18" rx="1.5" fill="var(--accent)"/>
+            <rect x="3" y="10" width="18" height="4" rx="1.5" fill="var(--accent)"/>
+          </svg>
+        </div>
+        <h1>CarePulse</h1>
+        <p>Book appointments, track your queue position, and manage every visit</p>
+        <div class="auth-mobile-tags">
+          <span class="auth-mobile-tag">Live queue tracking</span>
+          <span class="auth-mobile-tag">Verified doctors</span>
+          <span class="auth-mobile-tag">Secure records</span>
+        </div>
+      </div>
+
+      <div class="card">
+
+        <div class="segmented" style="width: 100%; margin-bottom: 24px;" role="tablist">
+          <div class="slider" id="tab-slider"></div>
+          <button id="tab-login" class="active" style="flex: 1;" onclick="showTab('login')">Log in</button>
+          <button id="tab-signup" style="flex: 1;" onclick="showTab('signup')">Sign up</button>
+        </div>
+
+        <div id="alert-box"></div>
+
+        <!-- LOGIN FORM -->
+        <form id="login-form">
+          <div class="field">
+            <label for="login-email">Email</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 6 L12 13 L20 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <input type="email" id="login-email" placeholder="you@example.com" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <div class="input-wrap has-toggle">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10 V7 a4 4 0 0 1 8 0 V10" stroke="currentColor" stroke-width="1.6"/></svg>
+              </span>
+              <input type="password" id="login-password" placeholder="Enter your password" required>
+              <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('login-password', this)" aria-label="Show password">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2 12 C4.5 7 8 4.5 12 4.5 C16 4.5 19.5 7 22 12 C19.5 17 16 19.5 12 19.5 C8 19.5 4.5 17 2 12 Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="auth-forgot-row">
+            <button type="button" class="auth-link" onclick="showForgot(true)">Forgot password?</button>
+          </div>
+          <button type="submit" class="btn btn-primary" id="login-btn">
+            <span class="btn-spinner" id="login-spinner"></span>
+            <span id="login-btn-text">Log in</span>
+          </button>
+        </form>
+
+        <!-- FORGOT PASSWORD MINI FLOW -->
+        <div id="forgot-panel" class="hidden">
+          <p class="auth-forgot-copy">Enter your account email and we'll send you a reset link.</p>
+          <form id="forgot-form">
+            <div class="field">
+              <label for="forgot-email">Email</label>
+              <div class="input-wrap">
+                <span class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 6 L12 13 L20 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <input type="email" id="forgot-email" placeholder="you@example.com" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="forgot-btn">
+              <span class="btn-spinner" id="forgot-spinner"></span>
+              <span id="forgot-btn-text">Send reset link</span>
+            </button>
+          </form>
+          <p style="text-align: center; margin-top: 14px; font-size: 13px;">
+            <button type="button" class="auth-link" onclick="showForgot(false)">Back to log in</button>
+          </p>
+        </div>
+
+        <!-- SIGNUP FORM -->
+        <form id="signup-form" class="hidden">
+          <div class="field">
+            <label for="signup-name">Full name</label>
+            <input type="text" id="signup-name" placeholder="Your name" required>
+          </div>
+          <div class="field">
+            <label for="signup-email">Email</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 6 L12 13 L20 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <input type="email" id="signup-email" placeholder="you@example.com" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="signup-password">Password</label>
+            <div class="input-wrap has-toggle">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10 V7 a4 4 0 0 1 8 0 V10" stroke="currentColor" stroke-width="1.6"/></svg>
+              </span>
+              <input type="password" id="signup-password" placeholder="At least 6 characters" required minlength="6">
+              <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('signup-password', this)" aria-label="Show password">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2 12 C4.5 7 8 4.5 12 4.5 C16 4.5 19.5 7 22 12 C19.5 17 16 19.5 12 19.5 C8 19.5 4.5 17 2 12 Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="signup-btn">
+            <span class="btn-spinner" id="signup-spinner"></span>
+            <span id="signup-btn-text">Create account</span>
+          </button>
+          <p style="text-align: center; margin-top: 14px; font-size: 13px;">
+            Creating a patient account. Doctors and staff accounts are added by a clinic admin.
+          </p>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  // ─────────────────────────────────────────────
+  // Floating background particles
+  // ─────────────────────────────────────────────
+  const illustration = document.getElementById('illustration');
+  if (illustration) {
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'auth-particle';
+      const size = 3 + Math.random() * 5;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.left = `${Math.random() * 90 + 5}%`;
+      p.style.bottom = `${Math.random() * 20}%`;
+      p.style.animationDuration = `${8 + Math.random() * 10}s`;
+      p.style.animationDelay = `${Math.random() * 8}s`;
+      illustration.appendChild(p);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Rotating typewriter tagline
+  // ─────────────────────────────────────────────
+  const rotatingPhrases = ['Built for patients.', 'Built for doctors.', 'Built for clinics.'];
+  let phraseIndex = 0, charIndex = 0, deleting = false;
+  const rotatingEl = document.getElementById('rotating-text');
+
+  function typeLoop() {
+    const current = rotatingPhrases[phraseIndex];
+    if (!deleting) {
+      charIndex++;
+      rotatingEl.textContent = current.slice(0, charIndex);
+      if (charIndex === current.length) {
+        deleting = true;
+        setTimeout(typeLoop, 1400);
+        return;
+      }
+    } else {
+      charIndex--;
+      rotatingEl.textContent = current.slice(0, charIndex);
+      if (charIndex === 0) {
+        deleting = false;
+        phraseIndex = (phraseIndex + 1) % rotatingPhrases.length;
+      }
+    }
+    setTimeout(typeLoop, deleting ? 35 : 55);
+  }
+  if (rotatingEl) typeLoop();
+
+  // ─────────────────────────────────────────────
+  // Tabs (with sliding indicator)
+  // ─────────────────────────────────────────────
+  function moveSlider(tab) {
+    const slider = document.getElementById('tab-slider');
+    slider.style.transform = tab === 'signup' ? 'translateX(100%)' : 'translateX(0)';
+  }
+
+  function showTab(tab) {
+    document.getElementById('forgot-panel').classList.add('hidden');
+    document.querySelector('.segmented').classList.remove('hidden');
+
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
+    document.getElementById('alert-box').innerHTML = '';
+    moveSlider(tab);
+  }
+
+  function showAlert(message, type = 'error') {
+    document.getElementById('alert-box').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+  }
+
+  function showForgot(show) {
+    document.getElementById('login-form').classList.toggle('hidden', show);
+    document.getElementById('signup-form').classList.add('hidden');
+    document.getElementById('forgot-panel').classList.toggle('hidden', !show);
+    document.querySelector('.segmented').classList.toggle('hidden', show);
+    document.getElementById('alert-box').innerHTML = '';
+    if (show) {
+      document.getElementById('tab-login').classList.add('active');
+      document.getElementById('tab-signup').classList.remove('active');
+      moveSlider('login');
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Password show/hide toggle
+  // ─────────────────────────────────────────────
+  function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  // ─────────────────────────────────────────────
+  // Button loading-state helper
+  // ─────────────────────────────────────────────
+  function setLoading(prefix, isLoading, loadingText, defaultText) {
+    document.getElementById(`${prefix}-spinner`).classList.toggle('show', isLoading);
+    document.getElementById(`${prefix}-btn-text`).textContent = isLoading ? loadingText : defaultText;
+    document.getElementById(`${prefix}-btn`).disabled = isLoading;
+  }
+
+  // ─────────────────────────────────────────────
+  // Form submissions
+  // ─────────────────────────────────────────────
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setLoading('login', true, 'Logging in...', 'Log in');
+    try {
+      const data = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: {
+          email: document.getElementById('login-email').value,
+          password: document.getElementById('login-password').value,
+        },
+      });
+      loginSuccess(data);
+    } catch (err) {
+      showAlert(err.message);
+      setLoading('login', false, 'Logging in...', 'Log in');
+    }
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setLoading('signup', true, 'Creating account...', 'Create account');
+    try {
+      await apiRequest('/auth/signup', {
+        method: 'POST',
+        body: {
+          name: document.getElementById('signup-name').value,
+          email: document.getElementById('signup-email').value,
+          password: document.getElementById('signup-password').value,
+        },
+      });
+      showAlert('Account created — you can log in now.', 'success');
+      showTab('login');
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      setLoading('signup', false, 'Creating account...', 'Create account');
+    }
+  });
+
+  document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setLoading('forgot', true, 'Sending...', 'Send reset link');
+    try {
+      await apiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: { email: document.getElementById('forgot-email').value },
+      });
+      showAlert("If that email exists, we've sent a reset link.", 'success');
+      document.getElementById('forgot-form').reset();
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      setLoading('forgot', false, 'Sending...', 'Send reset link');
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Clinic Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div style="padding: 10px 14px 24px;">
+      <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">CarePulse</p>
+      <h2 style="font-size: 17px; margin-top: 4px;">Hi, Admin 👋</h2>
+    </div>
+    <div class="nav-link active" onclick="showSection('overview')" id="nav-overview">🏠 Overview</div>
+    <div class="nav-link" onclick="showSection('trends')" id="nav-trends">📈 Patient trends</div>
+    <div class="nav-link" onclick="showSection('doctors')" id="nav-doctors">🩺 Doctors</div>
+    <div class="nav-link" onclick="showSection('patients')" id="nav-patients">🧑‍🤝‍🧑 Patients</div>
+    <div style="flex: 1;"></div>
+    <div class="nav-link" onclick="logout()">🚪 Log out</div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <div id="alert-box"></div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: OVERVIEW -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-overview">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Overview</h1>
+          <p style="margin-top: 4px;">Manage doctors, patients, and view clinic stats</p>
+        </div>
+      </div>
+
+      <div class="card mt-24">
+        <h2 style="font-size: 17px; margin-bottom: 16px;">Clinic stats</h2>
+        <div id="analytics-grid" class="stats-grid">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: PATIENT TRENDS -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-trends" class="hidden">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Patient trends</h1>
+          <p style="margin-top: 4px;">New patients over time</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex-between" style="margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <h2 style="font-size: 17px;">New patients</h2>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-inline" id="trend-btn-weekly" onclick="setTrendRange('weekly')">Weekly</button>
+            <button class="btn btn-secondary btn-inline" id="trend-btn-monthly" onclick="setTrendRange('monthly')">Monthly</button>
+            <button class="btn btn-secondary btn-inline" id="trend-btn-yearly" onclick="setTrendRange('yearly')">Yearly</button>
+          </div>
+        </div>
+
+        <div id="trend-summary" style="display: flex; gap: 24px; margin-bottom: 18px; flex-wrap: wrap;">
+          <div>
+            <p style="font-size: 12px; font-weight: 600;">New patients (this period)</p>
+            <p id="trend-total" style="font-size: 26px; font-weight: 800; color: var(--text);">—</p>
+          </div>
+          <div>
+            <p style="font-size: 12px; font-weight: 600;">Busiest day/period</p>
+            <p id="trend-peak" style="font-size: 26px; font-weight: 800; color: var(--text);">—</p>
+          </div>
+        </div>
+
+        <div style="position: relative; height: 280px;">
+          <canvas id="trend-chart"></canvas>
+        </div>
+        <p id="trend-empty" style="display:none; text-align:center; margin-top: 16px;">No data for this period yet.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: DOCTOR CREDENTIALS -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-doctors" class="hidden">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Doctor credentials</h1>
+          <p style="margin-top: 4px;">Add and manage doctor accounts</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <form id="doctor-form">
+          <div class="grid-2">
+            <div class="field">
+              <label for="doc-name">Full name</label>
+              <input type="text" id="doc-name" placeholder="e.g. Sharma" required>
+            </div>
+            <div class="field">
+              <label for="doc-specialization">Specialization</label>
+              <input type="text" id="doc-specialization" placeholder="e.g. General Physician">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="doc-email">Email</label>
+              <input type="email" id="doc-email" placeholder="doctor@clinic.com" required>
+            </div>
+            <div class="field">
+              <label for="doc-password">Password</label>
+              <input type="password" id="doc-password" placeholder="Set a login password" required minlength="6">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="doc-submit-btn" style="width: auto; padding: 12px 24px;">+ Add Doctor</button>
+        </form>
+
+        <div id="doctors-list" class="mt-24">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SECTION: PATIENT CREDENTIALS -->
+    <!-- ═══════════════════════════════ -->
+    <div id="section-patients" class="hidden">
+      <div class="topbar">
+        <div>
+          <h1 style="font-size: 22px;">Patient credentials</h1>
+          <p style="margin-top: 4px;">Add and manage patient accounts</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <form id="patient-form">
+          <div class="grid-2">
+            <div class="field">
+              <label for="pat-name">Full name</label>
+              <input type="text" id="pat-name" placeholder="Patient's name" required>
+            </div>
+            <div class="field">
+              <label for="pat-email">Email</label>
+              <input type="email" id="pat-email" placeholder="patient@example.com" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="pat-password">Password</label>
+            <input type="password" id="pat-password" placeholder="Set a login password" required minlength="6">
+          </div>
+          <button type="submit" class="btn btn-primary" id="pat-submit-btn" style="width: auto; padding: 12px 24px;">+ Add Patient</button>
+        </form>
+
+        <div id="patients-list" class="mt-24">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  requireRoleOrRedirect('admin');
+  let allUsers = [];
+  let trendChart = null;
+  let currentTrendRange = 'weekly';
+
+  // ─────────────────────────────────────────────
+  // Sidebar navigation
+  // ─────────────────────────────────────────────
+  function showSection(name) {
+    ['overview', 'trends', 'doctors', 'patients'].forEach(s => {
+      document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
+      document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
+    });
+
+    // The trends chart is only (re)drawn once its canvas is actually visible,
+    // otherwise Chart.js measures a 0-width hidden element and the graph
+    // renders squashed or blank. So load/refresh it right when this tab opens.
+    if (name === 'trends') {
+      setTrendRange(currentTrendRange);
+    }
+  }
+
+  function showAlert(message, type = 'error') {
+    document.getElementById('alert-box').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    setTimeout(() => { document.getElementById('alert-box').innerHTML = ''; }, 4000);
+  }
+
+  async function loadAnalytics() {
+    try {
+      const data = await apiRequest('/admin/analytics');
+      const grid = document.getElementById('analytics-grid');
+      const stat = (label, value) => `
+        <div class="stat-card">
+          <p class="stat-label">${label}</p>
+          <p class="stat-value">${value}</p>
+        </div>
+      `;
+      grid.innerHTML =
+        stat('Total patients', data.totalPatients) +
+        stat('Total doctors', data.totalDoctors) +
+        stat("Today's appointments", data.today.totalAppointments) +
+        stat('Waiting', data.today.waiting) +
+        stat('In progress', data.today.inProgress) +
+        stat('Completed today', data.today.completed);
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // PATIENT TRENDS (weekly / monthly / yearly)
+  //
+  // Expects backend endpoint:
+  //   GET /admin/analytics/patient-trends?range=weekly|monthly|yearly
+  // Response shape:
+  //   { labels: ["Mon","Tue",...] or ["Jan","Feb",...] or ["2023","2024",...],
+  //     counts: [3, 5, 2, ...] }
+  // ─────────────────────────────────────────────
+  function setTrendRange(range) {
+    currentTrendRange = range;
+    ['weekly', 'monthly', 'yearly'].forEach(r => {
+      document.getElementById(`trend-btn-${r}`).classList.toggle('btn-primary', r === range);
+      document.getElementById(`trend-btn-${r}`).classList.toggle('btn-secondary', r !== range);
+    });
+    loadTrends(range);
+  }
+
+  async function loadTrends(range) {
+    try {
+      const data = await apiRequest(`/admin/analytics/patient-trends?range=${range}`);
+      renderTrendChart(data.labels || [], data.counts || []);
+    } catch (err) {
+      showAlert(err.message);
+      renderTrendChart([], []);
+    }
+  }
+
+  function renderTrendChart(labels, counts) {
+    const total = counts.reduce((a, b) => a + b, 0);
+    document.getElementById('trend-total').textContent = total;
+
+    const emptyMsg = document.getElementById('trend-empty');
+    const canvas = document.getElementById('trend-chart');
+
+    if (!counts.length || total === 0) {
+      emptyMsg.style.display = 'block';
+      canvas.style.display = 'none';
+      document.getElementById('trend-peak').textContent = '—';
+      if (trendChart) { trendChart.destroy(); trendChart = null; }
+      return;
+    }
+
+    emptyMsg.style.display = 'none';
+    canvas.style.display = 'block';
+
+    const peakIndex = counts.indexOf(Math.max(...counts));
+    document.getElementById('trend-peak').textContent = `${labels[peakIndex]} (${counts[peakIndex]})`;
+
+    if (trendChart) trendChart.destroy();
+
+    const ctx = canvas.getContext('2d');
+    trendChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'New patients',
+          data: counts,
+          backgroundColor: '#4f7cff',
+          borderRadius: 6,
+          maxBarThickness: 46
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // Shared row renderer — view mode
+  // ─────────────────────────────────────────────
+  function userRowHTML(user) {
+    return `
+      <div class="flex-between" id="row-${user._id}" style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+        <div>
+          <p style="color: var(--text); font-weight: 700;">${user.name}</p>
+          <p style="font-size: 13px; margin-top: 2px;">${user.email}${user.specialization ? ' · ' + user.specialization : ''}</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-inline" onclick="startEdit('${user._id}')">Edit</button>
+          <button class="btn btn-danger btn-inline" onclick="removeUser('${user._id}', '${user.name}')">Remove</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // ─────────────────────────────────────────────
+  // Edit mode — replaces the row with editable fields
+  // ─────────────────────────────────────────────
+  function startEdit(id) {
+    const user = allUsers.find(u => u._id === id);
+    if (!user) return;
+
+    const isDoctor = user.role === 'doctor';
+
+    document.getElementById(`row-${id}`).outerHTML = `
+      <div id="row-${id}" style="padding: 14px 0; border-bottom: 1px solid var(--border);">
+        <div class="${isDoctor ? 'grid-2' : ''}" style="margin-bottom: 10px;">
+          <div class="field" style="margin-bottom: 10px;">
+            <label>Name</label>
+            <input type="text" id="edit-name-${id}" value="${user.name}">
+          </div>
+          ${isDoctor ? `
+            <div class="field" style="margin-bottom: 10px;">
+              <label>Specialization</label>
+              <input type="text" id="edit-spec-${id}" value="${user.specialization || ''}">
+            </div>
+          ` : ''}
+        </div>
+        <div class="grid-2">
+          <div class="field" style="margin-bottom: 10px;">
+            <label>Email</label>
+            <input type="email" id="edit-email-${id}" value="${user.email}">
+          </div>
+          <div class="field" style="margin-bottom: 10px;">
+            <label>New password <span style="font-weight: 400;">(leave blank to keep current)</span></label>
+            <input type="password" id="edit-password-${id}" placeholder="••••••">
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary btn-inline" onclick="saveEdit('${id}')">Save changes</button>
+          <button class="btn btn-secondary btn-inline" onclick="cancelEdit('${id}')">Cancel</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function cancelEdit(id) {
+    const user = allUsers.find(u => u._id === id);
+    document.getElementById(`row-${id}`).outerHTML = userRowHTML(user);
+  }
+
+  async function saveEdit(id) {
+    const user = allUsers.find(u => u._id === id);
+    const body = {
+      name: document.getElementById(`edit-name-${id}`).value,
+      email: document.getElementById(`edit-email-${id}`).value,
+    };
+    const password = document.getElementById(`edit-password-${id}`).value;
+    if (password) body.password = password;
+    if (user.role === 'doctor') body.specialization = document.getElementById(`edit-spec-${id}`).value;
+
+    try {
+      await apiRequest(`/admin/users/${id}`, { method: 'PUT', body });
+      showAlert('Updated successfully', 'success');
+      loadUsers();
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  async function removeUser(id, name) {
+    if (!confirm(`Remove ${name}? This can't be undone.`)) return;
+    try {
+      await apiRequest(`/admin/users/${id}`, { method: 'DELETE' });
+      showAlert(`${name} removed`, 'success');
+      loadUsers();
+      loadAnalytics();
+      if (!document.getElementById('section-trends').classList.contains('hidden')) {
+        loadTrends(currentTrendRange);
+      }
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  async function loadUsers() {
+    try {
+      allUsers = await apiRequest('/admin/users');
+
+      const doctors = allUsers.filter(u => u.role === 'doctor');
+      const patients = allUsers.filter(u => u.role === 'patient');
+
+      document.getElementById('doctors-list').innerHTML =
+        doctors.length ? doctors.map(userRowHTML).join('') : '<p>No doctors added yet.</p>';
+
+      document.getElementById('patients-list').innerHTML =
+        patients.length ? patients.map(userRowHTML).join('') : '<p>No patients yet.</p>';
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  document.getElementById('doctor-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('doc-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+    try {
+      await apiRequest('/admin/add-doctor', {
+        method: 'POST',
+        body: {
+          name: document.getElementById('doc-name').value,
+          specialization: document.getElementById('doc-specialization').value,
+          email: document.getElementById('doc-email').value,
+          password: document.getElementById('doc-password').value,
+        },
+      });
+      showAlert('Doctor account created', 'success');
+      e.target.reset();
+      loadUsers();
+      loadAnalytics();
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '+ Add Doctor';
+    }
+  });
+
+  document.getElementById('patient-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('pat-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+    try {
+      await apiRequest('/admin/add-patient', {
+        method: 'POST',
+        body: {
+          name: document.getElementById('pat-name').value,
+          email: document.getElementById('pat-email').value,
+          password: document.getElementById('pat-password').value,
+        },
+      });
+      showAlert('Patient account created', 'success');
+      e.target.reset();
+      loadUsers();
+      loadAnalytics();
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '+ Add Patient';
+    }
+  });
+
+  loadAnalytics();
+  loadUsers();
+</script>
+
+</body>
+</html>
