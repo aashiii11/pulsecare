@@ -20,4 +20,8 @@ app.use('/api/admin', adminRoutes);
 const queueRoutes = require('./routes/queue');
 app.use('/api/queue', queueRoutes);
 
-app.listen(5000, () => console.log('🚀 Server running on port 5000'));
+if (process.env.VERCEL !== '1') {
+  app.listen(process.env.PORT || 5000, () => console.log('🚀 Server running'));
+}
+
+module.exports = app;
