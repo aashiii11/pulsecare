@@ -8,7 +8,8 @@ const path = require('path');
 const app = express();      
     // <-- app pehle banao
 
-app.use(cors());                // <-- fir cors use karo
+app.use(cors());      
+app.get('/', (req, res) => res.redirect('/index.html'));           // <-- fir cors use karo
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // uploaded reports dikhane ke liye
 
