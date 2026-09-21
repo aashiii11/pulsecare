@@ -324,4 +324,29 @@ router.get('/my-stats', requireLogin, requireRole('doctor'), async (req, res) =>
   }
 });
 
+// ─────────────────────────────────────────────
+// PATIENT: delete an uploaded report from an appointment
+// ─────────────────────────────────────────────
+router.delete('/:id/reports/:reportId', requireLogin, requireRole('patient'), async (req, res) => {
+  try {
+    const appointment = await Appointment.findOne({ _id: req.params.id, patient: req.user.userId });
+    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+
+    const report = appointment.reports.id(req.params.reportId);
+    if (!report) return res.status(404).json({ message: 'Report not found' });
+
+    // remove the file from disk too, so uploads/reports doesn't fill up with orphans
+    const filePath = path.join(__dirname, '..', report.url.replace(/^\//, ''));
+    fs.unlink(filePath, () => {}); // fire-and-forget; ignore if already missing
+
+    report.deleteOne(); // remove subdocument from the array
+    await appointment.save();
+
+    res.json({ message: 'Report removed', reports: appointment.reports });
+  } catch (err) {
+    res.status(500).json({ message: 'Something went wrong', error: err.message });
+  }
+});
+
+
 module.exports = router;

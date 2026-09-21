@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -16,7 +15,7 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div style="padding: 10px 14px 24px;">
-      <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">CarePulse</p>
+      <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">PulseCare</p>
       <h2 style="font-size: 17px; margin-top: 4px;">Hi, Admin 👋</h2>
     </div>
     <div class="nav-link active" onclick="showSection('overview')" id="nav-overview">🏠 Overview</div>
@@ -83,9 +82,7 @@
           </div>
         </div>
 
-        <div style="position: relative; height: 280px;">
-          <canvas id="trend-chart"></canvas>
-        </div>
+        <div style="position: relative; min-height: 280px;" id="trend-chart-host"></div>
         <p id="trend-empty" style="display:none; text-align:center; margin-top: 16px;">No data for this period yet.</p>
       </div>
     </div>
@@ -175,7 +172,6 @@
 <script>
   requireRoleOrRedirect('admin');
   let allUsers = [];
-  let trendChart = null;
   let currentTrendRange = 'weekly';
 
   // ─────────────────────────────────────────────
@@ -187,9 +183,6 @@
       document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
     });
 
-    // The trends chart is only (re)drawn once its canvas is actually visible,
-    // otherwise Chart.js measures a 0-width hidden element and the graph
-    // renders squashed or blank. So load/refresh it right when this tab opens.
     if (name === 'trends') {
       setTrendRange(currentTrendRange);
     }
@@ -230,6 +223,9 @@
   // Response shape:
   //   { labels: ["Mon","Tue",...] or ["Jan","Feb",...] or ["2023","2024",...],
   //     counts: [3, 5, 2, ...] }
+  //
+  // The chart itself is drawn as plain inline SVG below (no chart library),
+  // so it always renders the same way regardless of network/CDN access.
   // ─────────────────────────────────────────────
   function setTrendRange(range) {
     currentTrendRange = range;
@@ -255,46 +251,83 @@
     document.getElementById('trend-total').textContent = total;
 
     const emptyMsg = document.getElementById('trend-empty');
-    const canvas = document.getElementById('trend-chart');
+    const host = document.getElementById('trend-chart-host');
 
     if (!counts.length || total === 0) {
       emptyMsg.style.display = 'block';
-      canvas.style.display = 'none';
+      host.innerHTML = '';
       document.getElementById('trend-peak').textContent = '—';
-      if (trendChart) { trendChart.destroy(); trendChart = null; }
       return;
     }
 
     emptyMsg.style.display = 'none';
-    canvas.style.display = 'block';
 
     const peakIndex = counts.indexOf(Math.max(...counts));
     document.getElementById('trend-peak').textContent = `${labels[peakIndex]} (${counts[peakIndex]})`;
 
-    if (trendChart) trendChart.destroy();
+    host.innerHTML = buildTrendSVG(labels, counts, peakIndex);
+  }
 
-    const ctx = canvas.getContext('2d');
-    trendChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'New patients',
-          data: counts,
-          backgroundColor: '#4f7cff',
-          borderRadius: 6,
-          maxBarThickness: 46
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, ticks: { precision: 0 } }
-        }
-      }
-    });
+  // Builds a self-contained line + area chart with gridlines, value labels
+  // and a highlighted peak point — no external chart library required.
+  function buildTrendSVG(labels, counts, peakIndex) {
+    const W = 900, H = 280;
+    const padL = 44, padR = 20, padT = 24, padB = 36;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const maxVal = Math.max(...counts, 1);
+    const gridCount = 4;
+    const niceMax = Math.max(gridCount, Math.ceil((maxVal * 1.2) / gridCount) * gridCount);
+
+    const xFor = i => counts.length > 1 ? padL + (i * plotW) / (counts.length - 1) : padL + plotW / 2;
+    const yFor = v => padT + plotH - (v / niceMax) * plotH;
+
+    let gridSVG = '';
+    for (let g = 0; g <= gridCount; g++) {
+      const val = Math.round((niceMax / gridCount) * g);
+      const y = yFor(val);
+      gridSVG += `
+        <line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="var(--border)" stroke-width="1" />
+        <text x="${padL - 10}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--text-muted)">${val}</text>
+      `;
+    }
+
+    const xLabelsSVG = labels.map((l, i) => `
+      <text x="${xFor(i)}" y="${H - padB + 20}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${l}</text>
+    `).join('');
+
+    const linePath = 'M ' + counts.map((c, i) => `${xFor(i)},${yFor(c)}`).join(' L ');
+    const areaPoints = `${padL},${padT + plotH} ` +
+      counts.map((c, i) => `${xFor(i)},${yFor(c)}`).join(' ') +
+      ` ${xFor(counts.length - 1)},${padT + plotH}`;
+
+    const pointsSVG = counts.map((c, i) => {
+      const isPeak = i === peakIndex;
+      return `
+        <circle cx="${xFor(i)}" cy="${yFor(c)}" r="${isPeak ? 6 : 4}"
+          fill="${isPeak ? '#ff8a4c' : '#4f7cff'}" stroke="var(--surface)" stroke-width="2">
+          <title>${labels[i]}: ${c} patient${c === 1 ? '' : 's'}</title>
+        </circle>
+        <text x="${xFor(i)}" y="${yFor(c) - 12}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text)">${c}</text>
+      `;
+    }).join('');
+
+    return `
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%; height:280px; display:block;">
+        <defs>
+          <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4f7cff" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="#4f7cff" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        ${gridSVG}
+        <polygon points="${areaPoints}" fill="url(#trendFill)" />
+        <path d="${linePath}" fill="none" stroke="#4f7cff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+        ${pointsSVG}
+        ${xLabelsSVG}
+      </svg>
+    `;
   }
 
   // ─────────────────────────────────────────────

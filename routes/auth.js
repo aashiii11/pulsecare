@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
+const { requireLogin } = require('../middleware/auth');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET; // set this in your .env file
@@ -119,6 +120,27 @@ router.post('/reset-password', async (req, res) => {
     await user.save();
 
     res.json({ message: 'Password reset successfully. You can now log in.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Something went wrong', error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// LOGGED-IN USER: update their own profile (name/email/password)
+// ─────────────────────────────────────────────
+router.put('/profile', requireLogin, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    const updates = {};
+    if (name) updates.name = name;
+    if (email) updates.email = email;
+    if (password) updates.password = await bcrypt.hash(password, 10);
+
+    const updated = await User.findByIdAndUpdate(req.user.userId, updates, { new: true }).select('-password');
+    if (!updated) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ message: 'Profile updated', user: updated });
   } catch (err) {
     res.status(500).json({ message: 'Something went wrong', error: err.message });
   }
