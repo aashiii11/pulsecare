@@ -6,7 +6,7 @@
 // wherever `node server.js` is actually listening — check server.js
 // for `app.listen(PORT)` and match the port below.
 // ───────────────────────────────────────────────
-const SERVER_ORIGIN = 'http://127.0.0.1:5000'; // ← change 5000 if your server.js listens on a different port
+const SERVER_ORIGIN = window.location.origin; // ← change 5000 if your server.js listens on a different port
 const API_BASE = `${SERVER_ORIGIN}/api`;
 
 // Wraps fetch() and automatically attaches the login token (if we have one).
