@@ -243,4 +243,177 @@ router.get('/analytics/patient-trends', async (req, res) => {
   }
 });
 
+// Add these two routes to your existing routes/admin.js, alongside
+// '/analytics' and '/analytics/patient-trends'. They use the SAME
+// requireLogin / requireRole('admin') middleware your other /admin
+// routes already use — adjust the import name if yours differs.
+//
+// Assumes:
+//   const Appointment = require('../models/Appointment');
+//   const User = require('../models/User');
+// are already imported at the top of admin.js (same as queue.js).
+//
+// Aggregates prescription.fee across ALL doctors (no doctor filter),
+// and also returns a breakdown so the admin can see who billed what.
+
+function startOfDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function startOfWeek(d) {
+  const x = startOfDay(d);
+  x.setDate(x.getDate() - x.getDay()); // Sunday as start of week
+  return x;
+}
+function startOfMonth(d) {
+  const x = startOfDay(d);
+  x.setDate(1);
+  return x;
+}
+function startOfYear(d) {
+  const x = startOfDay(d);
+  x.setMonth(0, 1);
+  return x;
+}
+
+// GET /admin/analytics/clinic-money-stats
+router.get('/analytics/clinic-money-stats', requireLogin, requireRole('admin'), async (req, res) => {
+  try {
+    const now = new Date();
+    const matchAll = { 'prescription.fee': { $gt: 0 } };
+
+    async function sumSince(sinceDate) {
+      const result = await Appointment.aggregate([
+        { $match: { ...matchAll, createdAt: { $gte: sinceDate } } },
+        { $group: { _id: null, total: { $sum: '$prescription.fee' } } },
+      ]);
+      return result[0]?.total || 0;
+    }
+
+    const [today, thisWeek, thisMonth, thisYear, allTimeAgg, byDoctorAgg] = await Promise.all([
+      sumSince(startOfDay(now)),
+      sumSince(startOfWeek(now)),
+      sumSince(startOfMonth(now)),
+      sumSince(startOfYear(now)),
+      Appointment.aggregate([
+        { $match: matchAll },
+        { $group: { _id: null, total: { $sum: '$prescription.fee' } } },
+      ]),
+      Appointment.aggregate([
+        { $match: matchAll },
+        {
+          $group: {
+            _id: '$doctor',
+            total: { $sum: '$prescription.fee' },
+            patientCount: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+    const totalAllTime = allTimeAgg[0]?.total || 0;
+
+    // Attach doctor names to the breakdown
+    const doctorIds = byDoctorAgg.map(d => d._id);
+    const doctors = await User.find({ _id: { $in: doctorIds } }).select('name specialization');
+    const doctorMap = Object.fromEntries(doctors.map(d => [d._id.toString(), d]));
+    const byDoctor = byDoctorAgg.map(d => ({
+      doctorId: d._id,
+      name: doctorMap[d._id?.toString()]?.name || 'Unknown',
+      specialization: doctorMap[d._id?.toString()]?.specialization || '',
+      total: d.total,
+      patientCount: d.patientCount,
+    }));
+
+    // Last 7 days, day-by-day (whole clinic)
+    const sevenDaysAgo = startOfDay(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const dailyAgg = await Appointment.aggregate([
+      { $match: { ...matchAll, createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          total: { $sum: '$prescription.fee' },
+        },
+      },
+    ]);
+    const dailyMap = Object.fromEntries(dailyAgg.map(d => [d._id, d.total]));
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      last7Days.push({
+        label: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+        amount: dailyMap[key] || 0,
+      });
+    }
+
+    // Last 12 months, month-by-month (whole clinic)
+    const twelveMonthsAgo = startOfMonth(now);
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    const monthlyAgg = await Appointment.aggregate([
+      { $match: { ...matchAll, createdAt: { $gte: twelveMonthsAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          total: { $sum: '$prescription.fee' },
+        },
+      },
+    ]);
+    const monthlyMap = Object.fromEntries(monthlyAgg.map(m => [m._id, m.total]));
+    const last12Months = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toISOString().slice(0, 7);
+      last12Months.push({
+        label: d.toLocaleDateString('en-IN', { month: 'short' }),
+        amount: monthlyMap[key] || 0,
+      });
+    }
+
+    res.json({ today, thisWeek, thisMonth, thisYear, totalAllTime, last7Days, last12Months, byDoctor });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load clinic money stats', error: err.message });
+  }
+});
+
+// GET /admin/analytics/clinic-money-stats/day?date=YYYY-MM-DD
+router.get('/analytics/clinic-money-stats/day', requireLogin, requireRole('admin'), async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ message: 'date is required (YYYY-MM-DD)' });
+
+    const dayStart = startOfDay(new Date(date));
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    const result = await Appointment.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: dayStart, $lt: dayEnd },
+          'prescription.fee': { $gt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          amount: { $sum: '$prescription.fee' },
+          patientCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.json({
+      date,
+      amount: result[0]?.amount || 0,
+      patientCount: result[0]?.patientCount || 0,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load clinic day profit', error: err.message });
+  }
+});
+
 module.exports = router;

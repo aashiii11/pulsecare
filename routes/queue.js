@@ -186,16 +186,16 @@ router.put('/:id/status', requireLogin, requireRole('doctor'), async (req, res) 
 });
 
 // ─────────────────────────────────────────────
-// DOCTOR: add/update a prescription (diagnosis + medicines + investigations + advice + follow-up)
+// DOCTOR: add/update a prescription (diagnosis + fee + medicines + investigations + advice + follow-up)
 // ─────────────────────────────────────────────
 router.put('/:id/prescription', requireLogin, requireRole('doctor'), async (req, res) => {
   try {
-    const { diagnosis, medicines, investigations, advice, followUpDate } = req.body;
+    const { diagnosis, fee, medicines, investigations, advice, followUpDate } = req.body;
 
     const appointment = await Appointment.findOneAndUpdate(
       { _id: req.params.id, doctor: req.user.userId },
       {
-        prescription: { diagnosis, medicines, investigations, advice },
+        prescription: { diagnosis, fee: fee || 0, medicines, investigations, advice },
         followUpDate: followUpDate || null,
       },
       { new: true }
@@ -325,6 +325,152 @@ router.get('/my-stats', requireLogin, requireRole('doctor'), async (req, res) =>
 });
 
 // ─────────────────────────────────────────────
+// DOCTOR: money stats — today / this week / this month / this year / all-time
+// plus a 7-day and 12-month breakdown for the charts
+// ─────────────────────────────────────────────
+function startOfDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function startOfWeekFn(d) {
+  const x = startOfDay(d);
+  x.setDate(x.getDate() - x.getDay()); // Sunday as start of week
+  return x;
+}
+function startOfMonthFn(d) {
+  const x = startOfDay(d);
+  x.setDate(1);
+  return x;
+}
+function startOfYearFn(d) {
+  const x = startOfDay(d);
+  x.setMonth(0, 1);
+  return x;
+}
+
+router.get('/my-money-stats', requireLogin, requireRole('doctor'), async (req, res) => {
+  try {
+    const doctorId = req.user.userId;
+    const now = new Date();
+
+    const matchDoctor = { doctor: doctorId, 'prescription.fee': { $gt: 0 } };
+
+    async function sumSince(sinceDate) {
+      const result = await Appointment.aggregate([
+        { $match: { ...matchDoctor, createdAt: { $gte: sinceDate } } },
+        { $group: { _id: null, total: { $sum: '$prescription.fee' } } },
+      ]);
+      return result[0]?.total || 0;
+    }
+
+    const [today, thisWeek, thisMonth, thisYear, allTimeAgg] = await Promise.all([
+      sumSince(startOfDay(now)),
+      sumSince(startOfWeekFn(now)),
+      sumSince(startOfMonthFn(now)),
+      sumSince(startOfYearFn(now)),
+      Appointment.aggregate([
+        { $match: matchDoctor },
+        { $group: { _id: null, total: { $sum: '$prescription.fee' } } },
+      ]),
+    ]);
+    const totalAllTime = allTimeAgg[0]?.total || 0;
+
+    // Last 7 days, day-by-day
+    const sevenDaysAgo = startOfDay(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const dailyAgg = await Appointment.aggregate([
+      { $match: { ...matchDoctor, createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          total: { $sum: '$prescription.fee' },
+        },
+      },
+    ]);
+    const dailyMap = Object.fromEntries(dailyAgg.map(d => [d._id, d.total]));
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      last7Days.push({
+        label: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+        amount: dailyMap[key] || 0,
+      });
+    }
+
+    // Last 12 months, month-by-month
+    const twelveMonthsAgo = startOfMonthFn(now);
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    const monthlyAgg = await Appointment.aggregate([
+      { $match: { ...matchDoctor, createdAt: { $gte: twelveMonthsAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          total: { $sum: '$prescription.fee' },
+        },
+      },
+    ]);
+    const monthlyMap = Object.fromEntries(monthlyAgg.map(m => [m._id, m.total]));
+    const last12Months = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toISOString().slice(0, 7);
+      last12Months.push({
+        label: d.toLocaleDateString('en-IN', { month: 'short' }),
+        amount: monthlyMap[key] || 0,
+      });
+    }
+
+    res.json({ today, thisWeek, thisMonth, thisYear, totalAllTime, last7Days, last12Months });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load money stats', error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// DOCTOR: profit for one specific day
+// ─────────────────────────────────────────────
+router.get('/my-money-stats/day', requireLogin, requireRole('doctor'), async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ message: 'date is required (YYYY-MM-DD)' });
+
+    const dayStart = startOfDay(new Date(date));
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    const result = await Appointment.aggregate([
+      {
+        $match: {
+          doctor: req.user.userId,
+          createdAt: { $gte: dayStart, $lt: dayEnd },
+          'prescription.fee': { $gt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          amount: { $sum: '$prescription.fee' },
+          patientCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.json({
+      date,
+      amount: result[0]?.amount || 0,
+      patientCount: result[0]?.patientCount || 0,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load day profit', error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
 // PATIENT: delete an uploaded report from an appointment
 // ─────────────────────────────────────────────
 router.delete('/:id/reports/:reportId', requireLogin, requireRole('patient'), async (req, res) => {
@@ -347,6 +493,5 @@ router.delete('/:id/reports/:reportId', requireLogin, requireRole('patient'), as
     res.status(500).json({ message: 'Something went wrong', error: err.message });
   }
 });
-
 
 module.exports = router;

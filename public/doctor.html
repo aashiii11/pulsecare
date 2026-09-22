@@ -57,7 +57,7 @@
   .queue-item:hover { background: var(--surface-input); }
   .queue-item.active {
     background: var(--surface-input);
-    border-left: 3px solid var(--text);
+    border-left: 3px solid var(--accent);
     padding-left: 13px;
   }
   .queue-item-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
@@ -89,6 +89,115 @@
   .advice-wrap { margin-top: 12px; }
   .advice-wrap.hidden { display: none; }
   .advice-wrap textarea { width: 100%; min-height: 180px; }
+
+  /* ── Checkup status bar: sits at the very start of the patient panel ── */
+  .checkup-status-bar { margin-top: 20px; }
+  .checkup-status-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .checkup-status-inprogress {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.35);
+  }
+  .checkup-status-done {
+    background: rgba(40, 199, 111, 0.15);
+    color: #28c76f;
+    border: 1px solid rgba(40, 199, 111, 0.35);
+  }
+
+  /* ── Revenue & profit dashboard block ── */
+  .money-stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .money-stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  .money-stat-card {
+    background: var(--surface-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .money-stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .money-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    background: rgba(45, 212, 191, 0.15);
+    color: var(--accent, #2dd4bf);
+    flex-shrink: 0;
+  }
+  .money-stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .money-stat-value {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .chart-panels-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .chart-panels-row { grid-template-columns: 1fr; }
+  }
+  .chart-panel {
+    background: var(--surface-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 18px 10px;
+  }
+  .chart-panel-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .chart-panel-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .chart-empty-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .day-lookup-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    background: var(--surface-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
 </style>
 </head>
 <body>
@@ -109,6 +218,29 @@
 
   <!-- MAIN CONTENT -->
   <div class="main-content">
+
+    <!-- CoreUI-style navbar -->
+    <div class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-menu-btn" title="Menu">☰</button>
+        <div class="navbar-search">
+          <span>🔍</span>
+          <input type="text" placeholder="Search" disabled>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-icon-btn" title="Notifications">🔔</button>
+        <button class="navbar-icon-btn" title="Tasks">📋</button>
+        <button class="navbar-icon-btn" title="Messages">✉️</button>
+        <button class="navbar-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+        <div class="navbar-avatar" id="header-avatar">D</div>
+      </div>
+    </div>
+    <div class="breadcrumb-row">
+      <span class="breadcrumb-home">Home</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current" id="breadcrumb-current">Overview</span>
+    </div>
 
     <div id="alert-box"></div>
 
@@ -135,7 +267,43 @@
       <div class="card mt-24">
         <h2 style="font-size: 17px; margin-bottom: 8px;">Last 7 days</h2>
         <p style="font-size: 13px; margin-bottom: 8px;">Number of patients booked with you each day</p>
-        <div class="mini-chart" id="week-chart"></div>
+        <div class="mini-chart multicolor" id="week-chart"></div>
+      </div>
+
+      <div class="card mt-24">
+        <h2 style="font-size: 17px;">Revenue &amp; profit</h2>
+        <p style="font-size: 13px; margin-top: 4px; margin-bottom: 16px;">Consultation fees collected, at a glance</p>
+
+        <div class="money-stats-row" id="doctor-money-stats">
+          <div class="money-stat-card"><div class="money-stat-top"><span class="money-stat-label">Today</span><span class="money-stat-icon">₹</span></div><p class="money-stat-value">—</p></div>
+          <div class="money-stat-card"><div class="money-stat-top"><span class="money-stat-label">This week</span><span class="money-stat-icon">₹</span></div><p class="money-stat-value">—</p></div>
+          <div class="money-stat-card"><div class="money-stat-top"><span class="money-stat-label">This month</span><span class="money-stat-icon">₹</span></div><p class="money-stat-value">—</p></div>
+          <div class="money-stat-card"><div class="money-stat-top"><span class="money-stat-label">This year</span><span class="money-stat-icon">₹</span></div><p class="money-stat-value">—</p></div>
+          <div class="money-stat-card"><div class="money-stat-top"><span class="money-stat-label">All-time total</span><span class="money-stat-icon">₹</span></div><p class="money-stat-value">—</p></div>
+        </div>
+
+        <div class="chart-panels-row mt-24">
+          <div class="chart-panel">
+            <p class="chart-panel-title">Daily profit</p>
+            <p class="chart-panel-sub">Last 7 days</p>
+            <div id="money-week-chart" style="width: 100%;"></div>
+          </div>
+          <div class="chart-panel">
+            <p class="chart-panel-title">Monthly profit</p>
+            <p class="chart-panel-sub">Last 12 months</p>
+            <div id="money-month-chart" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="day-lookup-row mt-24">
+          <div>
+            <label style="display: block; font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;">Check profit for a specific day</label>
+            <input type="date" id="money-day-picker"
+              style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-family: inherit; font-size: 13px;">
+          </div>
+          <button class="btn btn-secondary btn-inline" onclick="checkDayProfit()">Check</button>
+          <span id="money-day-result" style="font-size: 14px; font-weight: 700;"></span>
+        </div>
       </div>
     </div>
 
@@ -223,10 +391,28 @@
 <script src="js/api.js"></script>
 <script>
   requireRoleOrRedirect('doctor');
-  document.getElementById('doctor-name').textContent = (localStorage.getItem('name') || 'there').replace(/^Dr\.?\s*/i, '');
+  const doctorDisplayName = (localStorage.getItem('name') || 'there').replace(/^Dr\.?\s*/i, '');
+  document.getElementById('doctor-name').textContent = doctorDisplayName;
+  document.getElementById('header-avatar').textContent = doctorDisplayName.charAt(0).toUpperCase() || 'D';
+
+  // ─────────────────────────────────────────────
+  // Light / dark theme toggle
+  // ─────────────────────────────────────────────
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-toggle-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+  }
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+  applyTheme(localStorage.getItem('theme') || 'dark');
 
   let queueData = [];
   let selectedApptId = null;
+
+  const sectionLabels = { overview: 'Overview', queue: 'My queue' };
 
   // ─────────────────────────────────────────────
   // Sidebar navigation
@@ -236,8 +422,9 @@
       document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
       document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
     });
+    document.getElementById('breadcrumb-current').textContent = sectionLabels[name] || name;
     if (name === 'queue') loadQueue();
-    if (name === 'overview') loadStats();
+    if (name === 'overview') { loadStats(); loadMoneyStats(); }
   }
 
   function showAlert(message, type = 'error') {
@@ -402,6 +589,32 @@
   }
 
   // ─────────────────────────────────────────────
+  // Checkup status bar (top of panel): Start checkup → In progress → Completed
+  // ─────────────────────────────────────────────
+  function checkupStatusBarHTML(appt) {
+    if (appt.status === 'waiting') {
+      return `
+        <div class="checkup-status-bar" id="checkup-status-${appt._id}">
+          <button class="btn btn-primary btn-inline" onclick="updateStatus('${appt._id}', 'in-progress')">▶ Start checkup</button>
+        </div>
+      `;
+    }
+    if (appt.status === 'in-progress') {
+      return `
+        <div class="checkup-status-bar" id="checkup-status-${appt._id}">
+          <span class="checkup-status-banner checkup-status-inprogress">🩺 Checkup in progress</span>
+        </div>
+      `;
+    }
+    // completed
+    return `
+      <div class="checkup-status-bar" id="checkup-status-${appt._id}">
+        <span class="checkup-status-banner checkup-status-done">✅ Checkup completed</span>
+      </div>
+    `;
+  }
+
+  // ─────────────────────────────────────────────
   // Queue: left list + right detail panel
   // ─────────────────────────────────────────────
   async function loadQueue() {
@@ -475,6 +688,8 @@
         ${statusBadge(appt.status)}
       </div>
 
+      ${checkupStatusBarHTML(appt)}
+
       <div class="mt-24">
         <p style="font-size: 13px; color: var(--text-muted); font-weight: 600;">REASON FOR VISIT</p>
         <p style="color: var(--text); margin-top: 4px;">${appt.reasonForVisit}</p>
@@ -512,6 +727,13 @@
         <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Diagnosis — what exactly is wrong</label>
         <input type="text" id="diagnosis-${appt._id}" placeholder="e.g. Viral fever with mild dehydration"
           value="${appt.prescription?.diagnosis || ''}"
+          style="width: 100%; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; color: var(--text); font-family: inherit; font-size: 15px;">
+      </div>
+
+      <div class="mt-24">
+        <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Consultation fee (₹)</label>
+        <input type="number" min="0" step="1" id="fee-${appt._id}" placeholder="e.g. 500"
+          value="${appt.prescription?.fee ?? ''}"
           style="width: 100%; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; color: var(--text); font-family: inherit; font-size: 15px;">
       </div>
 
@@ -555,7 +777,6 @@
 
       <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
         <button class="btn btn-primary btn-inline" onclick="savePrescription('${appt._id}')">Save &amp; send to patient</button>
-        ${appt.status === 'waiting' ? `<button class="btn btn-secondary btn-inline" onclick="updateStatus('${appt._id}', 'in-progress')">Start checkup</button>` : ''}
         ${appt.status === 'in-progress' ? `<button class="btn btn-secondary btn-inline" onclick="updateStatus('${appt._id}', 'completed')">Mark completed</button>` : ''}
       </div>
     `;
@@ -579,6 +800,7 @@
 
   async function savePrescription(id) {
     const diagnosis = document.getElementById(`diagnosis-${id}`).value.trim();
+    const fee = parseFloat(document.getElementById(`fee-${id}`).value) || 0;
     const medicines = collectMedicines(id);
     const investigations = collectInvestigations(id);
     const advice = document.getElementById(`advice-${id}`).value.trim();
@@ -587,9 +809,10 @@
     try {
       await apiRequest(`/queue/${id}/prescription`, {
         method: 'PUT',
-        body: { diagnosis, medicines, investigations, advice, followUpDate },
+        body: { diagnosis, fee, medicines, investigations, advice, followUpDate },
       });
       showAlert('Prescription saved — the patient can see it now', 'success');
+      loadMoneyStats();
     } catch (err) {
       showAlert(err.message);
     }
@@ -616,7 +839,132 @@
     }
   }
 
+  // ─────────────────────────────────────────────
+  // Money analysis — revenue / profit stats + charts
+  // ─────────────────────────────────────────────
+  function formatRupees(n) {
+    const num = Number(n) || 0;
+    return '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  }
+
+  // Renders a dotted line chart (with shaded area + gridlines) as inline SVG.
+  // points: [{ label, amount }, ...]
+  function renderLineChart(containerId, points) {
+    const container = document.getElementById(containerId);
+    if (!points || points.length === 0) {
+      container.innerHTML = '<p class="chart-empty-note" style="padding: 60px 0;">No data yet.</p>';
+      return;
+    }
+
+    const hasData = points.some(p => p.amount > 0);
+
+    const width = Math.max(container.clientWidth || 320, 260);
+    const height = 200;
+    const padTop = 16;
+    const padBottom = 26;
+    const padSide = 8;
+    const plotW = width - padSide * 2;
+    const plotH = height - padTop - padBottom;
+
+    // Give the axis a sensible ceiling even when every value is 0, so the
+    // chart still reads as a chart instead of one flat line at the bottom.
+    const rawMax = Math.max(...points.map(p => p.amount), 0);
+    const maxVal = rawMax > 0 ? rawMax * 1.15 : 100;
+
+    const n = points.length;
+    const stepX = n > 1 ? plotW / (n - 1) : 0;
+
+    const coords = points.map((p, i) => {
+      const x = padSide + i * stepX;
+      const y = padTop + plotH - (p.amount / maxVal) * plotH;
+      return { x, y, ...p };
+    });
+
+    const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+    const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${padTop + plotH} L ${coords[0].x.toFixed(1)} ${padTop + plotH} Z`;
+
+    const gradientId = `grad-${containerId}`;
+
+    // 4 horizontal gridlines for a proper dashboard feel
+    const gridLines = [0, 0.25, 0.5, 0.75, 1].map(f => {
+      const y = padTop + plotH * f;
+      return `<line x1="${padSide}" y1="${y.toFixed(1)}" x2="${width - padSide}" y2="${y.toFixed(1)}" stroke="var(--border, #333)" stroke-width="1" opacity="0.5" />`;
+    }).join('');
+
+    const dots = coords.map(c => `
+      <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="var(--accent, #2dd4bf)" stroke="var(--surface-input, #111)" stroke-width="1.5">
+        <title>${c.label}: ${formatRupees(c.amount)}</title>
+      </circle>
+    `).join('');
+
+    const labelEvery = n > 8 ? Math.ceil(n / 8) : 1; // thin out labels when there are many points (e.g. 12 months)
+    const labels = coords.map((c, i) => (i % labelEvery === 0 || i === coords.length - 1) ? `
+      <text x="${c.x.toFixed(1)}" y="${height - 6}" font-size="10.5" fill="var(--text-muted, #9aa)" text-anchor="middle">${c.label}</text>
+    ` : '').join('');
+
+    container.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" style="display: block; overflow: visible;">
+        <defs>
+          <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--accent, #2dd4bf)" stop-opacity="0.30" />
+            <stop offset="100%" stop-color="var(--accent, #2dd4bf)" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        ${gridLines}
+        <path d="${areaPath}" fill="url(#${gradientId})" stroke="none" />
+        <path d="${linePath}" fill="none" stroke="var(--accent, #2dd4bf)" stroke-width="2.25" stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round" />
+        ${dots}
+        ${labels}
+      </svg>
+      ${hasData ? '' : '<p class="chart-empty-note">No revenue recorded for this period yet</p>'}
+    `;
+  }
+
+  async function loadMoneyStats() {
+    try {
+      const stats = await apiRequest('/queue/my-money-stats');
+
+      const tiles = [
+        { label: 'Today', value: stats.today },
+        { label: 'This week', value: stats.thisWeek },
+        { label: 'This month', value: stats.thisMonth },
+        { label: 'This year', value: stats.thisYear },
+        { label: 'All-time total', value: stats.totalAllTime },
+      ];
+      document.getElementById('doctor-money-stats').innerHTML = tiles.map(t => `
+        <div class="money-stat-card">
+          <div class="money-stat-top">
+            <span class="money-stat-label">${t.label}</span>
+            <span class="money-stat-icon">₹</span>
+          </div>
+          <p class="money-stat-value">${formatRupees(t.value)}</p>
+        </div>
+      `).join('');
+
+      renderLineChart('money-week-chart', stats.last7Days);
+      renderLineChart('money-month-chart', stats.last12Months);
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  async function checkDayProfit() {
+    const date = document.getElementById('money-day-picker').value;
+    const resultEl = document.getElementById('money-day-result');
+    if (!date) {
+      resultEl.textContent = 'Pick a date first';
+      return;
+    }
+    try {
+      const result = await apiRequest(`/queue/my-money-stats/day?date=${date}`);
+      resultEl.textContent = `${formatDate(date)}: ${formatRupees(result.amount)} from ${result.patientCount} patient${result.patientCount === 1 ? '' : 's'}`;
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
   loadStats();
+  loadMoneyStats();
 </script>
 
 </body>

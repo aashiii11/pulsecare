@@ -8,33 +8,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <style>
-  .top-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 18px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .top-header-brand { font-weight: 800; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .top-header-right { display: flex; align-items: center; gap: 14px; }
-  .top-header-bell {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: var(--surface-input); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px; cursor: default;
-  }
-  .top-header-user { display: flex; align-items: center; gap: 8px; }
-  .top-header-avatar {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: var(--accent-soft); border: 1px solid var(--accent-border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700; color: var(--accent);
-  }
-  .top-header-name { font-weight: 600; font-size: 14px; color: var(--text); }
-
   .greeting-block h1 { font-size: 22px; }
   .greeting-block p { margin-top: 4px; }
+
+  /* ── Fix: native <select> / <option> popups were rendering white-on-white ── */
+  select {
+    background-color: var(--surface-input);
+    color: var(--text);
+  }
+  select option {
+    background-color: var(--surface-input);
+    color: var(--text);
+  }
 
   .history-check {
     width: 20px;
@@ -61,21 +46,92 @@
     border-color: var(--accent-border);
   }
 
-  .report-thumb { position: relative; width: 70px; }
-  .report-thumb img {
-    width: 70px; height: 70px; object-fit: cover;
-    border-radius: 8px; border: 1px solid var(--border); display: block;
-  }
   .report-remove-btn {
-    position: absolute; top: -7px; right: -7px;
-    width: 20px; height: 20px; border-radius: 50%;
+    width: 22px; height: 22px; border-radius: 50%;
     background: var(--surface); border: 1px solid var(--border); color: var(--text);
     font-size: 11px; line-height: 1; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    padding: 0;
+    padding: 0; flex-shrink: 0;
   }
   .report-remove-btn:hover { background: #e5484d; border-color: #e5484d; color: #fff; }
   .report-remove-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Reports: one-by-one row, thumbnail + date + note side by side ── */
+  .report-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .report-row:last-child { border-bottom: none; }
+  .report-row-thumb img {
+    width: 64px; height: 64px; object-fit: cover;
+    border-radius: 8px; border: 1px solid var(--border); display: block;
+  }
+  .report-row-info { flex: 1; min-width: 0; }
+  .report-row-date { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+  .report-row-note { font-size: 13px; color: var(--text); margin-top: 4px; }
+
+  /* ── Medicines: given-on / take-until dates ── */
+  .med-card { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .med-card:last-child { border-bottom: none; }
+  .med-card-dates { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── Prescription pad: made to actually look like a doctor's Rx ── */
+  .rx-pad {
+    margin-top: 10px;
+    background-color: var(--surface-input);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+  .rx-pad-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 2px dashed var(--border);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .rx-clinic-name {
+    font-size: 11px; letter-spacing: 0.08em; color: var(--text-muted);
+    font-weight: 700; text-transform: uppercase;
+  }
+  .rx-doctor-name { font-size: 17px; font-weight: 800; color: var(--text); margin-top: 2px; }
+  .rx-doctor-spec { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .rx-pad-meta { text-align: right; font-size: 12px; color: var(--text-muted); }
+  .rx-pad-meta p { margin-top: 2px; }
+  .rx-symbol {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 26px; font-weight: 700; color: var(--accent);
+    margin-bottom: 4px; line-height: 1;
+  }
+  .rx-section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: var(--text-muted);
+    text-transform: uppercase; margin: 14px 0 6px;
+  }
+  .rx-diagnosis { font-size: 15px; font-weight: 600; color: var(--text); }
+  .rx-med-item { display: flex; gap: 10px; padding: 5px 0; }
+  .rx-med-index { font-weight: 700; color: var(--accent); min-width: 18px; font-size: 14px; }
+  .rx-med-detail p { margin: 0; }
+  .rx-med-name { font-weight: 700; color: var(--text); font-size: 14px; }
+  .rx-med-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .rx-followup {
+    margin-top: 14px; padding-top: 12px; border-top: 2px dashed var(--border);
+    font-size: 13px; font-weight: 700; color: var(--text);
+  }
+  .rx-signature { margin-top: 22px; text-align: right; }
+  .rx-sign-line {
+    font-family: 'Segoe Script', 'Brush Script MT', cursive;
+    font-size: 20px; color: var(--text);
+    border-bottom: 1px solid var(--border);
+    display: inline-block; padding-bottom: 4px; min-width: 160px;
+  }
+  .rx-sign-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -101,15 +157,27 @@
   <!-- MAIN CONTENT -->
   <div class="main-content">
 
-    <div class="top-header">
-      <div class="top-header-brand">🩺 CarePulse</div>
-      <div class="top-header-right">
-        <div class="top-header-bell" title="Notifications">🔔</div>
-        <div class="top-header-user">
-          <div class="top-header-avatar" id="header-avatar">T</div>
-          <span class="top-header-name" id="header-name">there</span>
+    <!-- CoreUI-style navbar -->
+    <div class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-menu-btn" title="Menu">☰</button>
+        <div class="navbar-search">
+          <span>🔍</span>
+          <input type="text" placeholder="Search" disabled>
         </div>
       </div>
+      <div class="navbar-right">
+        <button class="navbar-icon-btn" title="Notifications">🔔</button>
+        <button class="navbar-icon-btn" title="Tasks">📋</button>
+        <button class="navbar-icon-btn" title="Messages">✉️</button>
+        <button class="navbar-icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+        <div class="navbar-avatar" id="header-avatar">T</div>
+      </div>
+    </div>
+    <div class="breadcrumb-row">
+      <span class="breadcrumb-home">Home</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current" id="breadcrumb-current">Overview</span>
     </div>
 
     <div id="alert-box"></div>
@@ -240,6 +308,16 @@
           <textarea id="medications" placeholder="e.g. Metformin 500mg twice daily, Aspirin 75mg once daily"></textarea>
         </div>
 
+        <div class="field">
+          <label for="new-report-file">Upload a report <span style="font-weight: 400;">(optional — e.g. an earlier prescription, blood test, X-ray)</span></label>
+          <input type="file" id="new-report-file" accept="image/*" capture="environment" multiple>
+        </div>
+
+        <div class="field">
+          <label for="new-report-note">Note about this report <span style="font-weight: 400;">(optional)</span></label>
+          <input type="text" id="new-report-note" placeholder="e.g. Blood test done yesterday, fasting sample">
+        </div>
+
         <button class="btn btn-primary" id="book-btn" onclick="bookAppointment()">Join the queue</button>
       </div>
     </div>
@@ -287,7 +365,7 @@
       <div class="topbar">
         <div>
           <h1 style="font-size: 22px;">Medicines</h1>
-          <p style="margin-top: 4px;">Everything prescribed to you across visits</p>
+          <p style="margin-top: 4px;">Everything currently prescribed to you — finished courses drop off automatically</p>
         </div>
       </div>
 
@@ -343,9 +421,27 @@
   let displayName = localStorage.getItem('name') || 'there';
   let displayEmail = localStorage.getItem('email') || '';
 
+  // ─────────────────────────────────────────────
+  // Light / dark theme toggle
+  // ─────────────────────────────────────────────
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-toggle-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+  }
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+  applyTheme(localStorage.getItem('theme') || 'dark');
+
+  const sectionLabels = {
+    overview: 'Overview', appointment: 'Appointment', visits: 'My Visits',
+    reports: 'Reports', medicines: 'Medicines', profile: 'Profile'
+  };
+
   function refreshHeaderIdentity() {
     document.getElementById('patient-name').textContent = displayName;
-    document.getElementById('header-name').textContent = displayName;
     document.getElementById('header-avatar').textContent = displayName.charAt(0).toUpperCase();
     document.getElementById('profile-name').value = displayName;
     document.getElementById('profile-email').value = displayEmail;
@@ -364,6 +460,7 @@
       document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
       document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
     });
+    document.getElementById('breadcrumb-current').textContent = sectionLabels[name] || name;
   }
 
   function showAlert(message, type = 'error') {
@@ -374,6 +471,14 @@
   function statusBadge(status) {
     const labels = { waiting: 'Waiting', 'in-progress': 'In progress', completed: 'Completed' };
     return `<span class="badge badge-${status}">${labels[status]}</span>`;
+  }
+
+  // Formats any date-ish value safely; returns null if there's nothing usable
+  function formatDateSafe(value) {
+    if (!value) return null;
+    const d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   function toggleDetail(checkbox, detailId) {
@@ -443,41 +548,58 @@
     }
   }
 
+  // ─────────────────────────────────────────────
+  // Prescription — laid out like an actual doctor's Rx pad
+  // ─────────────────────────────────────────────
   function renderPrescription(appt) {
     const rx = appt.prescription;
     const hasContent = rx && (rx.diagnosis || (rx.medicines && rx.medicines.length) || (rx.investigations && rx.investigations.length) || rx.advice);
     if (!hasContent && !appt.followUpDate) return '';
 
-    const visitDate = appt.createdAt
-      ? new Date(appt.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-      : null;
+    const visitDate = formatDateSafe(appt.createdAt);
 
-    let html = `<div style="margin-top: 10px; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px;">`;
+    let html = `<div class="rx-pad">`;
 
-    if (visitDate) {
-      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700;">VISIT DATE</p>
-                <p style="color: var(--text); margin-top: 2px; margin-bottom: 10px;">${visitDate}</p>`;
-    }
+    html += `
+      <div class="rx-pad-header">
+        <div>
+          <p class="rx-clinic-name">PulseCare Clinic</p>
+          <p class="rx-doctor-name">Dr. ${appt.doctor?.name || 'Doctor'}</p>
+          ${appt.doctor?.specialization ? `<p class="rx-doctor-spec">${appt.doctor.specialization}</p>` : ''}
+        </div>
+        <div class="rx-pad-meta">
+          ${visitDate ? `<p>Date: ${visitDate}</p>` : ''}
+          <p>Token #${appt.tokenNumber}</p>
+        </div>
+      </div>
+      <div class="rx-symbol">℞</div>
+    `;
 
     if (rx?.diagnosis) {
-      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700;">DIAGNOSIS</p>
-                <p style="color: var(--text); margin-top: 2px; margin-bottom: 10px;">${rx.diagnosis}</p>`;
+      html += `<p class="rx-section-title">Diagnosis</p>
+                <p class="rx-diagnosis">${rx.diagnosis}</p>`;
     }
 
     if (rx?.medicines && rx.medicines.length > 0) {
-      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">MEDICINES</p>`;
-      rx.medicines.forEach(med => {
+      html += `<p class="rx-section-title">Medicines</p>`;
+      rx.medicines.forEach((med, idx) => {
         const times = [med.morning && 'Morning', med.afternoon && 'Afternoon', med.evening && 'Evening'].filter(Boolean).join(', ') || 'As directed';
         const food = med.foodTiming === 'before' ? 'Before food' : med.foodTiming === 'after' ? 'After food' : '';
         const duration = med.durationDays ? `for ${med.durationDays} day${med.durationDays === 1 ? '' : 's'}` : '';
-        html += `<p style="color: var(--text); font-size: 14px; margin-bottom: 4px;">
-                    <strong>${med.name}</strong> — ${times}${food ? ' · ' + food : ''}${duration ? ' · ' + duration : ''}
-                  </p>`;
+        html += `
+          <div class="rx-med-item">
+            <span class="rx-med-index">${idx + 1}.</span>
+            <div class="rx-med-detail">
+              <p class="rx-med-name">${med.name}</p>
+              <p class="rx-med-sub">${times}${food ? ' · ' + food : ''}${duration ? ' · ' + duration : ''}</p>
+            </div>
+          </div>
+        `;
       });
     }
 
     if (rx?.investigations && rx.investigations.length > 0) {
-      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin: 10px 0 6px;">INVESTIGATIONS ADVISED</p>`;
+      html += `<p class="rx-section-title">Investigations advised</p>`;
       rx.investigations.forEach(inv => {
         html += `<p style="color: var(--text); font-size: 14px; margin-bottom: 4px;">
                     <strong>${inv.name}</strong>${inv.note ? ' — ' + inv.note : ''}
@@ -486,17 +608,44 @@
     }
 
     if (rx?.advice) {
-      html += `<p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin: 10px 0 4px;">ADVICE</p>
+      html += `<p class="rx-section-title">Advice</p>
                 <p style="color: var(--text); font-size: 14px; white-space: pre-line;">${rx.advice}</p>`;
     }
 
     if (appt.followUpDate) {
-      const followUp = new Date(appt.followUpDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-      html += `<p style="font-size: 13px; color: var(--text); font-weight: 700; margin-top: 10px;">Next follow-up: ${followUp}</p>`;
+      html += `<div class="rx-followup">Next follow-up: ${formatDateSafe(appt.followUpDate)}</div>`;
     }
+
+    html += `
+      <div class="rx-signature">
+        <p class="rx-sign-line">Dr. ${appt.doctor?.name || ''}</p>
+        <p class="rx-sign-label">Signature</p>
+      </div>
+    `;
 
     html += `</div>`;
     return html;
+  }
+
+  // ─────────────────────────────────────────────
+  // Reports — one row per report: thumbnail, date submitted, note
+  // ─────────────────────────────────────────────
+  function reportRowHTML(r, apptId) {
+    const dateLabel = formatDateSafe(r.uploadedAt || r.createdAt || r.date) || 'Date not available';
+    return `
+      <div class="report-row">
+        <div class="report-row-thumb">
+          <a href="${SERVER_ORIGIN}${r.url}" target="_blank">
+            <img src="${SERVER_ORIGIN}${r.url}" alt="Report">
+          </a>
+        </div>
+        <div class="report-row-info">
+          <p class="report-row-date">Submitted on ${dateLabel}</p>
+          <p class="report-row-note">${r.description ? r.description : 'No note added'}</p>
+        </div>
+        <button type="button" class="report-remove-btn" title="Remove report" onclick="removeReport('${apptId}', '${r._id || ''}', this)">✕</button>
+      </div>
+    `;
   }
 
   function appointmentCardHTML(appt) {
@@ -523,26 +672,10 @@
 
         ${appt.reports && appt.reports.length > 0 ? `
           <div style="margin-top: 10px;">
-            <p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">YOUR UPLOADED REPORTS</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-              ${appt.reports.map(r => `
-                <div class="report-thumb">
-                  <a href="${SERVER_ORIGIN}${r.url}" target="_blank">
-                    <img src="${SERVER_ORIGIN}${r.url}" alt="Report">
-                  </a>
-                  <button type="button" class="report-remove-btn" title="Remove report" onclick="removeReport('${appt._id}', '${r._id || ''}', this)">✕</button>
-                </div>
-              `).join('')}
+            <p style="font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">YOUR UPLOADED REPORTS</p>
+            <div>
+              ${appt.reports.map(r => reportRowHTML(r, appt._id)).join('')}
             </div>
-          </div>
-        ` : ''}
-
-        ${appt.status !== 'completed' ? `
-          <div class="upload-card" data-appt-id="${appt._id}" style="margin-top: 12px; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;">
-            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Upload a report (photo or file)</label>
-            <input type="file" class="report-file-input" accept="image/*" capture="environment" multiple style="width: 100%; margin-bottom: 8px; color: var(--text); font-size: 13px;">
-            <input type="text" class="report-desc-input" placeholder="Any notes about this report (optional)" style="width: 100%; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-family: inherit; font-size: 13px;">
-            <button type="button" class="btn btn-secondary btn-inline" onclick="uploadReport('${appt._id}', this)">Upload</button>
           </div>
         ` : ''}
       </div>
@@ -613,29 +746,52 @@
     `;
   }
 
+  // ─────────────────────────────────────────────
+  // Medicines — show given-on / take-until dates; finished courses
+  // automatically drop off the list once their end date has passed
+  // ─────────────────────────────────────────────
   function renderMedicines(appointments) {
     const container = document.getElementById('medicines-list');
     const meds = [];
+    const now = new Date();
 
     appointments.forEach(a => {
-      if (a.prescription && a.prescription.medicines) {
-        a.prescription.medicines.forEach(med => meds.push({ ...med, doctor: a.doctor?.name }));
-      }
+      if (!a.prescription || !a.prescription.medicines) return;
+      const givenDate = a.createdAt ? new Date(a.createdAt) : null;
+
+      a.prescription.medicines.forEach(med => {
+        let endDate = null;
+        if (givenDate && med.durationDays) {
+          endDate = new Date(givenDate);
+          endDate.setDate(endDate.getDate() + med.durationDays);
+        }
+        // Course already finished — leave it out of the active list
+        if (endDate && endDate < now) return;
+
+        meds.push({ ...med, doctor: a.doctor?.name, givenDate, endDate });
+      });
     });
 
     if (meds.length === 0) {
-      container.innerHTML = '<p>No medicines prescribed yet.</p>';
+      container.innerHTML = '<p>No active medicines right now.</p>';
       return;
     }
 
     container.innerHTML = meds.map(med => {
       const times = [med.morning && 'Morning', med.afternoon && 'Afternoon', med.evening && 'Evening'].filter(Boolean).join(', ') || 'As directed';
       const food = med.foodTiming === 'before' ? 'Before food' : med.foodTiming === 'after' ? 'After food' : '';
-      const duration = med.durationDays ? `for ${med.durationDays} day${med.durationDays === 1 ? '' : 's'}` : '';
+      const givenLabel = formatDateSafe(med.givenDate);
+      const endLabel = formatDateSafe(med.endDate);
+
+      let dateLine = '';
+      if (givenLabel && endLabel) dateLine = `Given on ${givenLabel} · Take until ${endLabel}`;
+      else if (givenLabel) dateLine = `Given on ${givenLabel} · Ongoing / as directed`;
+
       return `
-        <div style="padding: 14px 0; border-bottom: 1px solid var(--border);">
+        <div class="med-card">
           <p style="color: var(--text); font-weight: 700;">${med.name}</p>
-          <p style="font-size: 13px; margin-top: 2px;">${times}${food ? ' · ' + food : ''}${duration ? ' · ' + duration : ''}</p>
+          <p style="font-size: 13px; margin-top: 2px;">${times}${food ? ' · ' + food : ''}</p>
+          ${dateLine ? `<p class="med-card-dates">${dateLine}</p>` : ''}
           <p style="font-size: 12px; margin-top: 4px;">Prescribed by Dr. ${med.doctor || 'Unknown'}</p>
         </div>
       `;
@@ -655,49 +811,9 @@
       return;
     }
 
-    container.innerHTML = `
-      <div style="display: flex; flex-wrap: wrap; gap: 16px;">
-        ${allReports.map(r => `
-          <div style="width: 110px;">
-            <div class="report-thumb" style="width: 110px;">
-              <a href="${SERVER_ORIGIN}${r.url}" target="_blank">
-                <img src="${SERVER_ORIGIN}${r.url}" alt="Report" style="width: 110px; height: 110px;">
-              </a>
-              <button type="button" class="report-remove-btn" title="Remove report" onclick="removeReport('${r.apptId}', '${r._id || ''}', this)">✕</button>
-            </div>
-            <p style="font-size: 11px; margin-top: 6px;">${r.description || 'Report'}</p>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
+    allReports.sort((a, b) => new Date(b.uploadedAt || b.createdAt || 0) - new Date(a.uploadedAt || a.createdAt || 0));
 
-  async function uploadReport(apptId, btnEl) {
-    const card = btnEl.closest('.upload-card');
-    const fileInput = card.querySelector('.report-file-input');
-    const description = card.querySelector('.report-desc-input').value.trim();
-
-    if (!fileInput.files || fileInput.files.length === 0) {
-      return showAlert('Please choose a photo or file first.');
-    }
-
-    const formData = new FormData();
-    for (const file of fileInput.files) formData.append('reports', file);
-    formData.append('description', description);
-
-    btnEl.disabled = true;
-    btnEl.textContent = 'Uploading...';
-
-    try {
-      await apiUpload(`/queue/${apptId}/upload-report`, formData);
-      showAlert('Report uploaded', 'success');
-      loadMyAppointments();
-    } catch (err) {
-      showAlert(err.message);
-    } finally {
-      btnEl.disabled = false;
-      btnEl.textContent = 'Upload';
-    }
+    container.innerHTML = allReports.map(r => reportRowHTML(r, r.apptId)).join('');
   }
 
   async function removeReport(apptId, reportId, btnEl) {
@@ -742,6 +858,8 @@
     document.getElementById('reason').value = '';
     document.getElementById('reason-detail').value = '';
     document.getElementById('medications').value = '';
+    document.getElementById('new-report-file').value = '';
+    document.getElementById('new-report-note').value = '';
     document.querySelectorAll('.history-check').forEach(cb => {
       cb.checked = false;
       const label = cb.closest('.history-check-label');
@@ -753,12 +871,18 @@
     });
   }
 
+  // ─────────────────────────────────────────────
+  // Booking — the report (if any) is asked for right here, once,
+  // and never asked for again later in "My Visits"
+  // ─────────────────────────────────────────────
   async function bookAppointment() {
     const doctorId = document.getElementById('doctor-select').value;
     const reasonCategory = document.getElementById('reason').value;
     const reasonDetail = document.getElementById('reason-detail').value.trim();
     const medications = document.getElementById('medications').value.trim();
     const pastHistory = buildPastHistory();
+    const reportFileInput = document.getElementById('new-report-file');
+    const reportNote = document.getElementById('new-report-note').value.trim();
     const btn = document.getElementById('book-btn');
 
     if (!doctorId) return showAlert('Please choose a doctor.');
@@ -776,6 +900,25 @@
         body: { doctorId, reasonForVisit, pastHistory, currentMedications: medications },
       });
       showAlert(`You're in the queue — your token number is ${result.tokenNumber}`, 'success');
+
+      // If a report was attached, upload it straight to the appointment we just created
+      if (reportFileInput.files && reportFileInput.files.length > 0) {
+        try {
+          const freshAppointments = await apiRequest('/queue/my-appointments');
+          const newAppt = freshAppointments.find(a => a.tokenNumber === result.tokenNumber && a.doctor?._id === doctorId)
+            || freshAppointments[0];
+
+          if (newAppt) {
+            const formData = new FormData();
+            for (const file of reportFileInput.files) formData.append('reports', file);
+            formData.append('description', reportNote);
+            await apiUpload(`/queue/${newAppt._id}/upload-report`, formData);
+          }
+        } catch (uploadErr) {
+          showAlert('You\'re in the queue, but the report upload failed: ' + uploadErr.message);
+        }
+      }
+
       resetForm();
       loadMyAppointments();
       showSection('overview');

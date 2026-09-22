@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign in — PulseCare</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PulseCare — Queue, consult & record, in one visit</title>
+<meta name="description" content="PulseCare is a clinic queue and record system: book an appointment, watch the queue live, see the doctor, and keep every prescription and report in one place.">
 <meta name="theme-color" content="#060b14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,37 +12,152 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   /* ═══════════════════════════════════════════════════════
-     Sign-in — a dark observation room.
-     One beam of light falls on the form; a blueprint grid and
-     a slow diagnostic scan sit behind it. The card stack shows
-     what the product holds: the live queue board and a record.
-
-     Below the form, one patient walks the whole pathway —
-     arrival, appointment, queue, doctor, prescription,
-     pharmacy, reports, discharge — and the trace lights the
-     line behind them as they go.
+     BASE TOKENS
+     Same navy / blue-accent / teal-vital palette as the rest
+     of PulseCare — nothing here changes the color scheme,
+     it just gives this standalone page its own copy of the
+     tokens your css/style.css already defines, plus the few
+     base component classes (.btn, .field, .card, .alert …)
+     that this page needs and that style.css normally supplies.
      ═══════════════════════════════════════════════════════ */
-
-  @property --brd { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-
-  body { overflow-x: hidden; }
-
-  .stage {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 26px 20px 48px;
-    isolation: isolate;
+  :root {
+    --bg: #060b14;
+    --surface: #0b1422;
+    --surface-input: rgba(13, 22, 38, 0.82);
+    --surface-hover: rgba(32, 48, 74, 0.55);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(140, 180, 255, 0.18);
+    --text: #f2f6ff;
+    --text-secondary: #c3d0e8;
+    --text-muted: #8598b8;
+    --light: #eaf1ff;
+    --accent: #5b9dff;
+    --accent-glow: rgba(91, 157, 255, 0.45);
+    --accent-ring: rgba(91, 157, 255, 0.22);
+    --accent-soft: rgba(91, 157, 255, 0.12);
+    --accent-border: rgba(91, 157, 255, 0.35);
+    --vital: #2fd4a7;
+    --vital-soft: rgba(47, 212, 167, 0.12);
+    --warning: #eab34a;
+    --warning-bg: rgba(234, 179, 74, 0.10);
+    --danger: #ff6b6b;
+    --danger-bg: rgba(255, 107, 107, 0.10);
+    --radius: 12px;
+    --radius-lg: 18px;
+    --shadow-lg: 0 30px 70px -30px rgba(0,0,0,0.65);
+    --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --header-h: 76px;
+  }
+  :root[data-theme="light"] {
+    --bg: #f3f6fd;
+    --surface: #ffffff;
+    --surface-input: #ffffff;
+    --surface-hover: #eef3ff;
+    --border: rgba(18, 30, 55, 0.10);
+    --border-strong: rgba(18, 30, 55, 0.16);
+    --text: #0d1626;
+    --text-secondary: #33425c;
+    --text-muted: #647392;
+    --light: #0d1626;
+    --shadow-lg: 0 30px 70px -30px rgba(20,35,70,0.22);
   }
 
-  /* ── Layer 1: blueprint grid with survey crosshairs ──────── */
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 14px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+  section { scroll-margin-top: calc(var(--header-h) + 10px); }
+  .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .hidden { display: none !important; }
+  .mt-24 { margin-top: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── Base components (normally supplied by css/style.css) ── */
+  .card {
+    background: var(--surface-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+  }
+  .btn {
+    width: 100%;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 20px;
+    border-radius: 999px;
+    font-weight: 700; font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(180deg, #6cabff, var(--accent));
+    color: #04101f;
+    box-shadow: 0 14px 32px -14px var(--accent-glow);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 18px 38px -14px var(--accent-glow); }
+  .btn-secondary { background: var(--surface-hover); color: var(--text); border-color: var(--border-strong); }
+  .btn-secondary:hover { background: var(--surface-input); border-color: var(--accent-border); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border-strong); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent-border); }
+  .btn-inline { width: auto; padding: 10px 18px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+  .field-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 5px; }
+  .field input, .field textarea {
+    width: 100%;
+    background: var(--surface-input);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 11px 12px;
+    color: var(--text);
+    font-family: inherit; font-size: 14px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .field textarea { resize: vertical; min-height: 108px; }
+  .field input:focus, .field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3.5px var(--accent-ring);
+  }
+
+  .alert { padding: 11px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 14px; animation: alert-in .24s ease both; }
+  .alert-error { background: var(--danger-bg); color: #ff9d9d; border: 1px solid rgba(255,107,107,0.28); }
+  .alert-success { background: var(--vital-soft); color: var(--vital); border: 1px solid rgba(47,212,167,0.28); }
+  @keyframes alert-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: block; }
+
+  .section-head { max-width: 640px; }
+  .section-head h2 { font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -0.02em; line-height: 1.15; margin: 10px 0 0; }
+  .section-head p { font-size: 15.5px; color: var(--text-muted); line-height: 1.6; margin-top: 12px; }
+
+  .section-pad { padding: clamp(56px, 9vh, 108px) 0; }
+
+  /* ═══════════════════════════════════════════════════════
+     BACKGROUND ATMOSPHERE — unchanged from the sign-in page:
+     blueprint grid, starfield, lamp beam, diagnostic scan.
+     ═══════════════════════════════════════════════════════ */
+  @property --brd { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+
   .layer-grid {
-    position: fixed;
-    inset: -80px;
-    z-index: -3;
-    pointer-events: none;
+    position: fixed; inset: -80px; z-index: -3; pointer-events: none;
     background-image:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg stroke='%235b9dff' stroke-width='1' opacity='0.5'%3E%3Cpath d='M80 74v12M74 80h12'/%3E%3C/g%3E%3C/svg%3E"),
       linear-gradient(to right, rgba(91, 157, 255, 0.06) 1px, transparent 1px),
@@ -49,815 +165,494 @@
     background-size: 160px 160px, 160px 160px, 160px 160px;
     -webkit-mask-image: radial-gradient(130% 92% at 50% 8%, #000 12%, transparent 76%);
             mask-image: radial-gradient(130% 92% at 50% 8%, #000 12%, transparent 76%);
-    /* drifts a little with the pointer */
     transform: translate3d(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -14px), 0);
     transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-
-  /* Cells of the grid light up now and then, like a panel self-testing */
   .layer-cells { position: fixed; inset: 0; z-index: -3; pointer-events: none; overflow: hidden; }
   .cell {
-    position: absolute;
-    width: 160px; height: 160px;
+    position: absolute; width: 160px; height: 160px;
     background: linear-gradient(145deg, rgba(91, 157, 255, 0.10), rgba(91, 157, 255, 0.015));
-    opacity: 0;
-    animation: cell-glow 5.5s ease-in-out forwards;
+    opacity: 0; animation: cell-glow 5.5s ease-in-out forwards;
   }
-  @keyframes cell-glow {
-    0%   { opacity: 0; }
-    22%  { opacity: 1; }
-    70%  { opacity: 1; }
-    100% { opacity: 0; }
-  }
+  @keyframes cell-glow { 0% { opacity: 0; } 22% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
 
-  /* ── Layer 2: starfield ──────────────────────────────────── */
-  .layer-stars {
-    position: fixed; inset: -40px; z-index: -3; pointer-events: none; overflow: hidden;
+  .layer-stars { position: fixed; inset: -40px; z-index: -3; pointer-events: none; overflow: hidden;
     transform: translate3d(calc(var(--px, 0) * -26px), calc(var(--py, 0) * -26px), 0);
-    transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .star {
-    position: absolute;
-    border-radius: 50%;
-    background: #cfe0ff;
-    animation: twinkle ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.10; }
-    50%      { opacity: 0.85; }
-  }
+    transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .star { position: absolute; border-radius: 50%; background: #cfe0ff; animation: twinkle ease-in-out infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.10; } 50% { opacity: 0.85; } }
 
-  /* ── Layer 3: the beam ───────────────────────────────────── */
   .layer-beam {
-    position: fixed;
-    top: -6%;
-    left: 50%;
-    width: min(1000px, 118vw);
-    height: 92vh;
-    z-index: -2;
-    pointer-events: none;
+    position: fixed; top: -6%; left: 50%; width: min(1000px, 118vw); height: 92vh; z-index: -2; pointer-events: none;
     transform-origin: 50% 0;
-    /* the lamp swings very slightly toward the pointer */
     transform: translateX(-50%) rotate(calc(var(--px, 0) * 1.1deg));
     transition: transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
-    background: linear-gradient(180deg,
-      rgba(140, 186, 255, 0.30) 0%,
-      rgba(110, 165, 255, 0.14) 26%,
-      rgba(91, 157, 255, 0.06) 52%,
-      transparent 80%);
+    background: linear-gradient(180deg, rgba(140, 186, 255, 0.30) 0%, rgba(110, 165, 255, 0.14) 26%, rgba(91, 157, 255, 0.06) 52%, transparent 80%);
     clip-path: polygon(48.4% 0%, 51.6% 0%, 100% 100%, 0% 100%);
-    filter: blur(28px);
-    opacity: 0;
-    animation: beam-on 2.2s cubic-bezier(0.22, 0.9, 0.3, 1) 0.15s forwards,
-               beam-breathe 9s ease-in-out 2.6s infinite;
+    filter: blur(28px); opacity: 0;
+    animation: beam-on 2.2s cubic-bezier(0.22, 0.9, 0.3, 1) 0.15s forwards, beam-breathe 9s ease-in-out 2.6s infinite;
   }
   @keyframes beam-on { to { opacity: 1; } }
   @keyframes beam-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.74; } }
-
   .layer-beam::after {
-    content: '';
-    position: absolute;
-    top: -70px; left: 50%;
-    width: 320px; height: 220px;
-    transform: translateX(-50%);
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(190, 217, 255, 0.5), transparent 68%);
+    content: ''; position: absolute; top: -70px; left: 50%; width: 320px; height: 220px; transform: translateX(-50%);
+    border-radius: 50%; background: radial-gradient(circle, rgba(190, 217, 255, 0.5), transparent 68%);
   }
 
-  /* ── Layer 4: diagnostic scan ────────────────────────────── */
   .layer-scan {
-    position: fixed;
-    left: 0; right: 0; top: 0;
-    height: 220px;
-    z-index: -2;
-    pointer-events: none;
+    position: fixed; left: 0; right: 0; top: 0; height: 220px; z-index: -2; pointer-events: none;
     background: linear-gradient(180deg, transparent, rgba(47, 212, 167, 0.055) 60%, rgba(47, 212, 167, 0.12));
     border-bottom: 1px solid rgba(47, 212, 167, 0.22);
-    opacity: 0;
-    animation: scan-pass 14s ease-in-out 4s infinite;
+    opacity: 0; animation: scan-pass 14s ease-in-out 4s infinite;
   }
-  @keyframes scan-pass {
-    0%   { transform: translateY(-240px); opacity: 0; }
-    6%   { opacity: 0.9; }
-    26%  { transform: translateY(100vh); opacity: 0; }
-    100% { transform: translateY(100vh); opacity: 0; }
-  }
+  @keyframes scan-pass { 0% { transform: translateY(-240px); opacity: 0; } 6% { opacity: 0.9; } 26% { transform: translateY(100vh); opacity: 0; } 100% { transform: translateY(100vh); opacity: 0; } }
 
-  /* ── Header ──────────────────────────────────────────────── */
-  .stage-head {
-    width: 100%;
-    max-width: 1180px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    animation: rise 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.1s both;
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* ═══════════════════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════════════════ */
+  .site-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+    height: var(--header-h);
+    display: flex; align-items: center;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: rgba(6, 11, 20, 0.5);
+    border-bottom: 1px solid transparent;
+    backdrop-filter: blur(10px);
+    transition: background .25s ease, border-color .25s ease;
   }
+  :root[data-theme="light"] .site-header { background: rgba(243, 246, 253, 0.72); }
+  .site-header.scrolled { background: rgba(6, 11, 20, 0.82); border-bottom-color: var(--border); }
+  :root[data-theme="light"] .site-header.scrolled { background: rgba(255,255,255,0.86); }
+
+  .site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+
   .brand { display: flex; align-items: center; gap: 11px; }
   .brand-mark {
-    width: 34px; height: 34px; border-radius: 11px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 11px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
     background: linear-gradient(160deg, #1b2b47, #101b2e);
     border: 1px solid var(--border-strong);
     box-shadow: 0 0 28px -8px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.07);
   }
   .brand-name { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
-  .brand-sub { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 1px; }
+
+  .nav-links { display: flex; align-items: center; gap: 30px; }
+  .nav-link-top {
+    font-size: 13.5px; font-weight: 700; color: var(--text-muted);
+    padding: 6px 2px; position: relative; transition: color .15s ease;
+  }
+  .nav-link-top::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 2px; border-radius: 2px;
+    background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .2s ease;
+  }
+  .nav-link-top:hover, .nav-link-top.active { color: var(--text); }
+  .nav-link-top.active::after { transform: scaleX(1); }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface-hover); border: 1px solid var(--border-strong);
+    color: var(--text-secondary); cursor: pointer;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent-border); }
+
+  .nav-toggle { display: none; }
+  .mobile-nav {
+    position: fixed; inset: var(--header-h) 0 0 0; z-index: 39;
+    background: rgba(6, 11, 20, 0.97);
+    backdrop-filter: blur(14px);
+    padding: 26px 24px;
+    transform: translateY(-8px); opacity: 0; pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  :root[data-theme="light"] .mobile-nav { background: rgba(243,246,253,0.98); }
+  .mobile-nav.open { opacity: 1; transform: none; pointer-events: auto; }
+  .mobile-nav .nav-link-top { display: block; font-size: 18px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .mobile-nav .header-actions { margin-top: 22px; flex-direction: column; }
+  .mobile-nav .btn { width: 100%; }
+
+  @media (max-width: 880px) {
+    .nav-links, .header-actions .btn { display: none; }
+    .nav-toggle { display: flex; }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════════════════ */
+  .hero {
+    padding-top: calc(var(--header-h) + clamp(28px, 6vh, 60px));
+    padding-bottom: clamp(40px, 6vh, 70px);
+  }
+  .hero .wrap {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(24px, 5vw, 60px);
+    align-items: center;
+  }
+  .hero-copy { animation: rise 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.15s both; }
+  .hero-copy h1 {
+    font-size: clamp(34px, 5vw, 56px);
+    line-height: 1.04; letter-spacing: -0.03em; margin: 14px 0 0;
+    background: linear-gradient(176deg, #f2f7ff 6%, #b9d1f7 60%, #5f8dd4 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  :root[data-theme="light"] .hero-copy h1 {
+    background: linear-gradient(176deg, #0d1626 6%, #223a63 60%, #3a5c9e 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero-copy p.lead { font-size: 16px; color: var(--text-muted); line-height: 1.6; margin: 16px 0 0; max-width: 46ch; }
+  .hero-cta { display: flex; align-items: center; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  .hero-cta .btn { width: auto; padding: 14px 26px; }
+  .hero-stats { display: flex; gap: 28px; margin-top: 34px; flex-wrap: wrap; }
+  .hero-stat b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+  .hero-stat span { font-size: 12px; color: var(--text-muted); font-weight: 600; }
 
   .status-chip {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 12px; font-weight: 700; color: var(--text-secondary);
-    background: rgba(13, 22, 38, 0.72);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 7px 14px 7px 11px;
-    backdrop-filter: blur(8px);
+    background: var(--surface-input); border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 14px 7px 11px; backdrop-filter: blur(8px);
   }
-  .status-chip i {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--vital); display: block;
-    animation: beat 2.4s ease-out infinite;
-  }
-  @keyframes beat {
-    0%   { box-shadow: 0 0 0 0 rgba(47, 212, 167, 0.5); }
-    70%  { box-shadow: 0 0 0 8px rgba(47, 212, 167, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(47, 212, 167, 0); }
-  }
-  .chip-token { display: inline-block; }
+  .status-chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--vital); display: block; animation: beat 2.4s ease-out infinite; }
+  @keyframes beat { 0% { box-shadow: 0 0 0 0 rgba(47, 212, 167, 0.5); } 70% { box-shadow: 0 0 0 8px rgba(47, 212, 167, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 212, 167, 0); } }
   .chip-token.flip { animation: token-advance 0.45s cubic-bezier(0.2, 0.7, 0.2, 1); }
-  @keyframes token-advance {
-    from { opacity: 0; transform: translateY(7px); }
-    to   { opacity: 1; transform: none; }
-  }
+  @keyframes token-advance { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
 
-  /* ── Hero ────────────────────────────────────────────────── */
-  .hero { text-align: center; margin: clamp(22px, 4vh, 44px) 0 clamp(18px, 3vh, 30px); }
-
-  .hero-eyebrow {
-    font-size: 12px; font-weight: 600; color: var(--text-muted);
-    letter-spacing: 0.04em; text-transform: uppercase;
-    animation: rise 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.25s both;
-  }
-
-  .hero h1 {
+  /* ── Brain network visual ── */
+  .brain-stage {
     position: relative;
-    font-size: clamp(34px, 6vw, 68px);
-    line-height: 1;
-    letter-spacing: -0.04em;
-    margin-top: 7px;
-    background: linear-gradient(176deg, #f2f7ff 6%, #b9d1f7 46%, #5f8dd4 96%);
-    -webkit-background-clip: text;
-            background-clip: text;
-    color: transparent;
-    animation: lamp-warm 1.5s cubic-bezier(0.22, 0.9, 0.3, 1) 0.2s both;
-  }
-  /* The wordmark warms up like a lamp rather than sliding in */
-  @keyframes lamp-warm {
-    from { opacity: 0; filter: blur(16px); transform: scale(0.985); }
-    to   { opacity: 1; filter: blur(0);    transform: scale(1); }
-  }
-
-  /* A highlight travels across the letters every few seconds */
-  .hero h1 .shine {
-    position: absolute; inset: 0;
-    background: linear-gradient(100deg, transparent 38%, rgba(255,255,255,0.75) 50%, transparent 62%);
-    -webkit-background-clip: text; background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    background-size: 260% 100%;
-    animation: shine-pass 6.5s ease-in-out 2.4s infinite;
-    pointer-events: none;
-  }
-  @keyframes shine-pass {
-    0%, 62% { background-position: 190% 0; }
-    88%     { background-position: -90% 0; }
-    100%    { background-position: -90% 0; }
-  }
-
-  .hero-sub {
-    margin: 12px auto 0;
-    max-width: 52ch;
-    font-size: clamp(13.5px, 1.2vw, 15.5px);
-    color: var(--text-muted);
-    line-height: 1.5;
-    animation: rise 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.55s both;
-  }
-
-  /* The "one visit, end to end" badge — now lives centered under the tagline */
-  .hero-pulse-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    margin: 18px auto 0;
-    font-size: 11.5px;
-    font-weight: 800;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    background: rgba(13, 22, 38, 0.72);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 8px 16px 8px 12px;
-    backdrop-filter: blur(8px);
-    animation:
-      rise 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.65s both,
-      badge-pulse 2.4s ease-out infinite;
-  }
-  .hero-pulse-badge i {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--vital); display: block; flex-shrink: 0;
-    animation: beat 2.4s ease-out infinite;
-  }
-  @keyframes badge-pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(47, 212, 167, 0.35); }
-    70%  { box-shadow: 0 0 0 10px rgba(47, 212, 167, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(47, 212, 167, 0); }
-  }
-
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: none; }
-  }
-
-  /* ── The card stack ──────────────────────────────────────── */
-  .stack {
-    position: relative;
+    aspect-ratio: 620 / 480;
     width: 100%;
-    max-width: 1020px;
-    margin-top: clamp(44px, 8vh, 86px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    animation: rise 0.9s cubic-bezier(0.22, 0.9, 0.3, 1) 0.3s both;
   }
-
-  .stack-side {
-    position: absolute;
-    top: 30px;
-    width: 340px;
-    padding: 20px;
-    border-radius: var(--radius-lg);
-    background: rgba(13, 22, 38, 0.82);
-    border: 1px solid var(--border);
-    box-shadow: 0 30px 70px -30px #000;
-    pointer-events: none;
-    opacity: 0;
-    filter: blur(1.5px);
-    z-index: 0;
+  .brain-glow {
+    position: absolute; inset: -12%;
+    background: radial-gradient(ellipse at center, var(--accent-glow), transparent 62%);
+    filter: blur(6px);
+    opacity: 0.55;
   }
-  .stack-side.left  { left: 0;  animation: slide-left  1s cubic-bezier(0.22, 0.9, 0.3, 1) 1s both; }
-  .stack-side.right { right: 0; animation: slide-right 1s cubic-bezier(0.22, 0.9, 0.3, 1) 1.1s both; }
-  @keyframes slide-left {
-    from { opacity: 0; transform: translateX(120px) scale(0.94); }
-    to   { opacity: 0.62; transform: translateX(calc(var(--px, 0) * 16px)) translateY(calc(var(--py, 0) * 10px)) scale(0.94) rotate(-1.4deg); }
+  .brain-stage svg { position: relative; width: 100%; height: 100%; overflow: visible; }
+  .brain-rotor { transform-box: view-box; transform-origin: 50% 50%; animation: brain-drift 32s ease-in-out infinite; }
+  @keyframes brain-drift {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(1.1deg) scale(1.012); }
   }
-  @keyframes slide-right {
-    from { opacity: 0; transform: translateX(-120px) scale(0.94); }
-    to   { opacity: 0.62; transform: translateX(calc(var(--px, 0) * 16px)) translateY(calc(var(--py, 0) * 10px)) scale(0.94) rotate(1.4deg); }
-  }
-
-  .side-title { font-size: 13.5px; font-weight: 700; color: var(--text-secondary); }
-  .side-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-  .side-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 9px 0; border-top: 1px solid var(--border);
-    font-size: 12.5px; color: var(--text-muted);
-  }
-  .side-row:first-of-type { margin-top: 14px; }
-  .side-row b { color: var(--text-secondary); font-weight: 600; }
-  .side-token {
-    font-family: var(--font-mono); font-variant-numeric: tabular-nums;
-    font-size: 30px; font-weight: 500; color: var(--light);
-    letter-spacing: -0.03em; margin-top: 10px;
-  }
-
-  /* ── The sign-in card ────────────────────────────────────── */
-  .auth-col {
-    position: relative; z-index: 2; width: 100%; max-width: 396px;
-    transform: translate3d(calc(var(--px, 0) * 5px), calc(var(--py, 0) * 4px), 0);
-    transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  .auth-card {
-    position: relative;
-    background: linear-gradient(180deg, rgba(18, 29, 48, 0.94), rgba(11, 19, 33, 0.96));
-    border: 1px solid var(--border-strong);
-    border-radius: 18px;
-    padding: 28px 26px;
-    backdrop-filter: blur(14px);
-    box-shadow: var(--shadow-lg);
-    animation: card-in 0.85s cubic-bezier(0.22, 0.9, 0.3, 1) 0.85s both;
-  }
-  @keyframes card-in {
-    from { opacity: 0; transform: translateY(24px) scale(0.975); }
-    to   { opacity: 1; transform: none; }
-  }
-
-  /* A light travels around the card's edge, slowly */
-  .auth-card::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: 19px;
-    padding: 1px;
-    background: conic-gradient(from var(--brd),
-      transparent 0 58%,
-      rgba(140, 190, 255, 0.55) 74%,
-      rgba(210, 232, 255, 0.9) 80%,
-      rgba(140, 190, 255, 0.55) 86%,
-      transparent 96%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-            mask-composite: exclude;
-    animation: brd-spin 8s linear 1.4s infinite;
-    pointer-events: none;
-  }
-  @keyframes brd-spin { to { --brd: 360deg; } }
-
-  /* Rim light on the top edge, where the beam lands */
-  .auth-card::before {
-    content: '';
-    position: absolute;
-    top: -1px; left: 14%; right: 14%;
-    height: 1px;
-    z-index: 1;
-    background: linear-gradient(90deg, transparent, rgba(160, 200, 255, 0.85), transparent);
-  }
-
-  /* Corner ticks — survey marks registering the card to the grid */
-  .tick {
-    position: absolute;
-    width: 9px; height: 9px;
-    border: 1px solid rgba(120, 165, 235, 0.55);
-    opacity: 0;
-    animation: tick-in 0.4s ease 1.5s forwards;
-  }
-  .tick.tl { top: -5px; left: -5px; border-right: 0; border-bottom: 0; }
-  .tick.tr { top: -5px; right: -5px; border-left: 0; border-bottom: 0; }
-  .tick.bl { bottom: -5px; left: -5px; border-right: 0; border-top: 0; }
-  .tick.br { bottom: -5px; right: -5px; border-left: 0; border-top: 0; }
-  @keyframes tick-in { to { opacity: 1; } }
-
-  .auth-title { margin-bottom: 20px; }
-  .auth-title h2 { font-size: 20px; }
-  .auth-title p { font-size: 13.5px; margin-top: 5px; }
-
-  .auth-card .segmented { width: 100%; margin-bottom: 20px; position: relative; }
-  .auth-card .segmented button { flex: 1; position: relative; z-index: 1; }
-  .seg-thumb {
-    position: absolute;
-    top: 4px; bottom: 4px; left: 4px;
-    width: calc(50% - 4px);
-    border-radius: 999px;
-    background: var(--surface-hover);
-    border: 1px solid var(--border-strong);
-    transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.5, 1);
-    z-index: 0;
-  }
-  .seg-thumb.right { transform: translateX(100%); }
-
-  /* Input with leading icon and optional reveal control */
-  .input-wrap { position: relative; }
-  .input-wrap input { padding-left: 38px; }
-  .input-wrap.has-toggle input { padding-right: 44px; }
-  .input-wrap .input-icon {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    color: #5b6d8e; pointer-events: none; display: flex;
-    transition: color 0.16s ease;
-  }
-  .input-wrap:focus-within .input-icon { color: var(--accent); }
-  .input-wrap .eye-toggle {
-    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-    background: none; border: none; cursor: pointer;
-    padding: 5px; border-radius: 6px; width: auto;
-    color: #5b6d8e; display: flex;
-  }
-  .input-wrap .eye-toggle:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-  /* Field being typed into by a demo login */
-  .field input.autofilling {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3.5px var(--accent-ring), 0 0 26px -8px var(--accent-glow);
-  }
-
-  .auth-pane { animation: pane-in 0.28s ease both; }
-  @keyframes pane-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-
-  .btn-spinner {
-    width: 15px; height: 15px; border-radius: 50%;
-    border: 2px solid rgba(4, 16, 31, 0.3);
-    border-top-color: #04101f;
-    animation: spin 0.7s linear infinite;
-    display: none;
-  }
-  .btn-spinner.show { display: inline-block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  #alert-box .alert { animation: alert-in 0.24s ease both; }
-  @keyframes alert-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
-
-  .auth-note { text-align: center; margin-top: 15px; font-size: 12.5px; color: var(--text-muted); line-height: 1.55; }
-
-  /* ── Demo logins (development only) ──────────────────────── */
-  .demo {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px dashed var(--border-strong);
-  }
-  .demo-head {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    font-size: 12px; font-weight: 700; color: var(--text-muted);
-    margin-bottom: 10px;
-  }
-  .demo-tag {
-    font-size: 10.5px; font-weight: 700; color: var(--warning);
-    background: var(--warning-bg); border: 1px solid rgba(234, 179, 74, 0.25);
-    border-radius: 999px; padding: 2px 8px;
-  }
-  .demo-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .demo-btn {
-    position: relative;
-    overflow: hidden;
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
-    padding: 11px 6px 10px;
-    border-radius: var(--radius);
-    background: var(--surface-input);
-    border: 1px solid var(--border-strong);
-    color: var(--text-secondary);
-    font-family: inherit; font-size: 12.5px; font-weight: 700;
-    cursor: pointer;
-    transition: border-color 0.16s ease, background 0.16s ease,
-                color 0.16s ease, transform 0.12s ease, box-shadow 0.16s ease;
-  }
-  .demo-btn svg { color: #6f86ab; transition: color 0.16s ease, transform 0.2s ease; }
-  .demo-btn:hover:not(:disabled) {
-    border-color: var(--accent-border);
-    background: var(--surface-hover);
-    color: var(--text);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px -14px var(--accent-glow);
-  }
-  .demo-btn:hover:not(:disabled) svg { color: var(--accent); transform: translateY(-1px); }
-  .demo-btn:active:not(:disabled) { transform: translateY(0); }
-  .demo-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .demo-btn.running {
-    opacity: 1;
-    border-color: var(--accent);
-    color: var(--text);
-    box-shadow: 0 0 0 3px var(--accent-ring);
-  }
-  .demo-btn.running svg { color: var(--accent); }
-  .demo-btn.running::after {
-    content: '';
-    position: absolute; inset: 0;
-    transform: translateX(-120%);
-    background: linear-gradient(100deg, transparent 20%, rgba(140, 190, 255, 0.28) 50%, transparent 80%);
-    animation: btn-sweep 1.1s ease infinite;
-  }
-  @keyframes btn-sweep { to { transform: translateX(120%); } }
-  .demo-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 10px; text-align: center; line-height: 1.5; }
-
-  .auth-secure {
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    margin-top: 18px; font-size: 12px; font-weight: 600; color: var(--text-muted);
-    animation: rise 0.7s ease 1.35s both;
-  }
+  .brain-fill { fill: var(--accent); opacity: 0.05; }
+  .brain-outline { fill: none; stroke: var(--accent); stroke-width: 1.8; opacity: 0.65; stroke-linejoin: round; }
+  .brain-fissure { fill: none; stroke: var(--accent); stroke-width: 1.6; opacity: 0.55; stroke-linecap: round; }
+  .brain-gyrus { fill: none; stroke: var(--accent); stroke-width: 1; opacity: 0.22; stroke-linecap: round; }
+  .brain-node { fill: var(--accent); }
+  .brain-edge { stroke: var(--accent); fill: none; }
+  .brain-pulse { filter: drop-shadow(0 0 4px currentColor); }
+  @media (prefers-reduced-motion: reduce) { .brain-rotor { animation: none; } }
+  @media (max-width: 880px) { .hero .wrap { grid-template-columns: 1fr; } .brain-stage { max-width: 460px; margin: 0 auto; } }
 
   /* ═══════════════════════════════════════════════════════
-     THE PATIENT JOURNEY
-     One quiet timeline. A single pulse travels it, and the
-     station the pulse has reached is the only one lit and the
-     only one holding a card. Everything else stays secondary.
+     PATIENT JOURNEY (unchanged component + animation)
      ═══════════════════════════════════════════════════════ */
-
-  .journey {
-    width: 100%;
-    max-width: 1180px;
-    margin-top: clamp(6px, 2vh, 18px);
-    animation: rise 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.5s both;
-  }
-
-  /* ── The track ───────────────────────────────────────────── */
-  .jtrack {
-    position: relative;
-    padding-top: 194px;              /* room for the active card + the figure */
-    overflow: hidden;
-  }
-
-  /* A pool of light sits wherever the pulse is */
+  .journey-section { padding: clamp(30px, 5vh, 60px) 0 clamp(56px, 9vh, 100px); }
+  .journey { width: 100%; margin-top: clamp(30px, 5vh, 50px); animation: rise 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.2s both; }
+  .jtrack { position: relative; padding-top: 194px; overflow: hidden; }
   .jglow {
-    position: absolute; left: 0; top: 0;
-    width: 260px; height: 130px;
+    position: absolute; left: 0; top: 0; width: 260px; height: 130px;
     transform: translate(var(--sx, 0px), var(--sy, 0px)) translate(-50%, -50%);
     background: radial-gradient(ellipse at center, rgba(91, 157, 255, 0.15), transparent 68%);
-    opacity: 0; transition: opacity .55s ease;
-    pointer-events: none;
+    opacity: 0; transition: opacity .55s ease; pointer-events: none;
   }
   .jtrack.ready .jglow { opacity: 1; }
   .jtrack.rewinding .jglow { opacity: 0; }
-  .jtrack.is-complete .jglow {
-    background: radial-gradient(ellipse at center, rgba(47, 212, 167, 0.14), transparent 68%);
-  }
-
-  /* ── The pathway ─────────────────────────────────────────── */
+  .jtrack.is-complete .jglow { background: radial-gradient(ellipse at center, rgba(47, 212, 167, 0.14), transparent 68%); }
   .jrail {
-    position: absolute;
-    left: 0; right: 0;
-    top: 213px;                      /* 194 + 19 = centre of the 38px node */
-    height: 2px;
-    border-radius: 2px;
-    background: var(--border);
+    position: absolute; left: 0; right: 0; top: 213px; height: 2px; border-radius: 2px; background: var(--border);
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
             mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
   }
   .jrail-fill {
-    position: absolute; left: 0; top: 0;
-    height: 100%;
-    width: var(--sx, 0px);
-    border-radius: 2px;
+    position: absolute; left: 0; top: 0; height: 100%; width: var(--sx, 0px); border-radius: 2px;
     background: linear-gradient(90deg, rgba(91, 157, 255, 0.14), var(--accent));
     box-shadow: 0 0 14px -1px var(--accent-glow);
   }
-  .jtrack.is-complete .jrail-fill {
-    background: linear-gradient(90deg, rgba(47, 212, 167, 0.14), var(--vital));
-    box-shadow: 0 0 20px -1px rgba(47, 212, 167, 0.55);
-  }
-
-  /* The house ECG glyph draws itself along the finished pathway */
+  .jtrack.is-complete .jrail-fill { background: linear-gradient(90deg, rgba(47, 212, 167, 0.14), var(--vital)); box-shadow: 0 0 20px -1px rgba(47, 212, 167, 0.55); }
   .jecg {
-    position: absolute; left: 0; right: 0;
-    top: 213px; height: 16px;
-    transform: translateY(-50%);
+    position: absolute; left: 0; right: 0; top: 213px; height: 16px; transform: translateY(-50%);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='16' viewBox='0 0 120 16'%3E%3Cpolyline points='0,10 26,10 31,10 34,4 37,15 40,8 44,10 70,10 90,10 94,6 98,12 101,10 120,10' fill='none' stroke='%232fd4a7' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: repeat-x;
-    background-position: left center;
-    background-size: 120px 16px;
+    background-repeat: repeat-x; background-position: left center; background-size: 120px 16px;
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
             mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
-    opacity: 0;
-    clip-path: inset(0 100% 0 0);
-    pointer-events: none;
+    opacity: 0; clip-path: inset(0 100% 0 0); pointer-events: none;
   }
-  .jtrack.is-complete .jecg {
-    opacity: 0.85;
-    animation: ecg-draw 1.05s cubic-bezier(0.22, 0.9, 0.3, 1) 0.2s forwards;
-  }
-  @keyframes ecg-draw {
-    from { clip-path: inset(0 100% 0 0); }
-    to   { clip-path: inset(0 0 0 0); }
-  }
-
-  /* ── The pulse — a small figure walking the line ─────────── */
+  .jtrack.is-complete .jecg { opacity: 0.85; animation: ecg-draw 1.05s cubic-bezier(0.22, 0.9, 0.3, 1) 0.2s forwards; }
+  @keyframes ecg-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
   .jpulse {
-    position: absolute; left: 0; top: 0;
-    width: 26px; height: 36px;
+    position: absolute; left: 0; top: 0; width: 26px; height: 36px;
     transform: translate(var(--sx, 0px), var(--sy, 0px)) translate(-50%, calc(-100% - 5px));
-    color: var(--accent);
-    filter: drop-shadow(0 0 8px rgba(91, 157, 255, 0.55));
-    opacity: 0;
-    transition: opacity .32s ease, color .4s ease, filter .4s ease;
-    pointer-events: none;
+    color: var(--accent); filter: drop-shadow(0 0 8px rgba(91, 157, 255, 0.55));
+    opacity: 0; transition: opacity .32s ease, color .4s ease, filter .4s ease; pointer-events: none;
   }
   .jtrack.moving .jpulse { opacity: 1; }
   .jtrack.is-complete .jpulse { color: var(--vital); filter: drop-shadow(0 0 8px rgba(47, 212, 167, 0.5)); }
   .jpulse svg { display: block; overflow: visible; }
-  /* a soft trail of light behind it as it walks */
-  .jpulse::before {
-    content: '';
-    position: absolute; right: 100%; bottom: 9px;
-    width: 58px; height: 3px; border-radius: 3px;
-    background: linear-gradient(90deg, transparent, var(--accent));
-    opacity: 0.75;
-  }
-  /* a faint pool of contact light under its feet */
-  .jpulse::after {
-    content: '';
-    position: absolute; left: 50%; bottom: -6px;
-    width: 30px; height: 8px; transform: translateX(-50%);
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(91, 157, 255, 0.32), transparent 70%);
-  }
+  .jpulse::before { content: ''; position: absolute; right: 100%; bottom: 9px; width: 58px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, var(--accent)); opacity: 0.75; }
+  .jpulse::after { content: ''; position: absolute; left: 50%; bottom: -6px; width: 30px; height: 8px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, rgba(91, 157, 255, 0.32), transparent 70%); }
   .jpulse .limb { transform-box: view-box; transform-origin: 13px 22px; }
   .jtrack.moving .jpulse .leg-a { animation: pulse-step-a .5s ease-in-out infinite; }
   .jtrack.moving .jpulse .leg-b { animation: pulse-step-b .5s ease-in-out infinite; }
   .jtrack.moving .jpulse .arm-a { animation: pulse-step-b .5s ease-in-out infinite; }
   .jtrack.moving .jpulse .arm-b { animation: pulse-step-a .5s ease-in-out infinite; }
-  .jtrack.moving .jpulse .body  { animation: pulse-bob .25s ease-in-out infinite; }
+  .jtrack.moving .jpulse .body { animation: pulse-bob .25s ease-in-out infinite; }
   @keyframes pulse-step-a { 0%, 100% { transform: rotate(18deg); } 50% { transform: rotate(-18deg); } }
   @keyframes pulse-step-b { 0%, 100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
-  @keyframes pulse-bob    { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.2px); } }
-
-  /* ── Stations ────────────────────────────────────────────── */
+  @keyframes pulse-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.2px); } }
   .jnodes { display: flex; align-items: flex-start; position: relative; z-index: 1; }
-  .jnode {
-    flex: 1 1 0; min-width: 0;
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-  }
+  .jnode { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .jdot {
-    width: 38px; height: 38px; flex: 0 0 38px;
-    border-radius: 12px;
+    width: 38px; height: 38px; flex: 0 0 38px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: #4d5f80;
-    transition: color .45s ease, border-color .45s ease, background .45s ease,
-                box-shadow .5s ease, transform .45s cubic-bezier(.34,1.2,.5,1);
+    background: var(--surface); border: 1px solid var(--border); color: #4d5f80;
+    transition: color .45s ease, border-color .45s ease, background .45s ease, box-shadow .5s ease, transform .45s cubic-bezier(.34,1.2,.5,1);
   }
-  .jnode.is-done .jdot {
-    color: rgba(47, 212, 167, 0.6);
-    border-color: rgba(47, 212, 167, 0.24);
-    background: rgba(47, 212, 167, 0.045);
-  }
-  .jnode.is-active .jdot {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: #0e1c31;
-    transform: translateY(-2px) scale(1.12);
-    box-shadow: 0 0 0 4px var(--accent-ring), 0 0 32px -6px var(--accent-glow);
-  }
-  /* at the end, every station is softly illuminated together */
-  .jtrack.all-lit .jnode .jdot {
-    color: var(--vital);
-    border-color: rgba(47, 212, 167, 0.42);
-    background: rgba(47, 212, 167, 0.08);
-    box-shadow: 0 0 24px -12px rgba(47, 212, 167, 0.9);
-  }
+  .jnode.is-done .jdot { color: rgba(47, 212, 167, 0.6); border-color: rgba(47, 212, 167, 0.24); background: rgba(47, 212, 167, 0.045); }
+  .jnode.is-active .jdot { color: var(--accent); border-color: var(--accent); background: var(--surface); transform: translateY(-2px) scale(1.12); box-shadow: 0 0 0 4px var(--accent-ring), 0 0 32px -6px var(--accent-glow); }
+  .jtrack.all-lit .jnode .jdot { color: var(--vital); border-color: rgba(47, 212, 167, 0.42); background: rgba(47, 212, 167, 0.08); box-shadow: 0 0 24px -12px rgba(47, 212, 167, 0.9); }
   .jtrack.all-lit .jlabel { color: var(--text-secondary); }
-
   .jmeta { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-  .jlabel {
-    font-size: 11.5px; font-weight: 700; letter-spacing: -0.005em;
-    color: #4d5f80; text-align: center; transition: color .45s ease;
-  }
+  .jlabel { font-size: 11.5px; font-weight: 700; letter-spacing: -0.005em; color: #4d5f80; text-align: center; transition: color .45s ease; }
   .jnode.is-done .jlabel { color: var(--text-muted); }
   .jnode.is-active .jlabel { color: var(--text); }
   .jdetail { display: none; }
-
-  /* ── The one card ────────────────────────────────────────── */
   .jcardstage { position: absolute; left: 0; right: 0; top: 0; height: 150px; pointer-events: none; }
-  .jcard-pos {
-    position: absolute; bottom: 0; left: 0;
-    transform: translate(var(--cx, 120px), 0) translateX(-50%);
-  }
+  .jcard-pos { position: absolute; bottom: 0; left: 0; transform: translate(var(--cx, 120px), 0) translateX(-50%); }
   .jcard {
-    position: relative;
-    width: 214px; max-height: 150px;
-    background: linear-gradient(180deg, rgba(18, 29, 48, 0.9), rgba(11, 19, 33, 0.94));
-    border: 1px solid var(--border-strong);
-    border-radius: 13px;
-    padding: 11px 13px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 22px 48px -26px #000, 0 0 40px -24px var(--accent-glow);
-    display: flex; flex-direction: column;
-    opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    position: relative; width: 214px; max-height: 150px;
+    background: var(--surface-input);
+    border: 1px solid var(--border-strong); border-radius: 13px; padding: 11px 13px;
+    backdrop-filter: blur(12px); box-shadow: 0 22px 48px -26px #000, 0 0 40px -24px var(--accent-glow);
+    display: flex; flex-direction: column; opacity: 0; transform: translateY(10px) scale(0.985);
     transition: opacity .4s ease, transform .45s cubic-bezier(.22,.9,.3,1);
   }
   .jcard.wide { width: 244px; }
   .jtrack.showing .jcard { opacity: 1; transform: none; }
-  /* the tether down to the station */
-  .jcard::after {
-    content: '';
-    position: absolute; left: 50%; bottom: -22px;
-    width: 1px; height: 22px;
-    background: linear-gradient(180deg, var(--accent-border), transparent);
-    opacity: 0; transition: opacity .4s ease .1s;
-  }
+  .jcard::after { content: ''; position: absolute; left: 50%; bottom: -22px; width: 1px; height: 22px; background: linear-gradient(180deg, var(--accent-border), transparent); opacity: 0; transition: opacity .4s ease .1s; }
   .jtrack.showing .jcard::after { opacity: 1; }
-
   .jc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .jc-title { font-size: 12.5px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; }
-  .jc-tag {
-    font-size: 9.5px; font-weight: 800; white-space: nowrap;
-    padding: 3px 8px; border-radius: 999px;
-    background: var(--accent-soft); color: var(--accent);
-    border: 1px solid var(--accent-border);
-    letter-spacing: 0.03em; text-transform: uppercase;
-  }
+  .jc-tag { font-size: 9.5px; font-weight: 800; white-space: nowrap; padding: 3px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); letter-spacing: 0.03em; text-transform: uppercase; }
   .jc-tag.ok { background: var(--vital-soft); color: var(--vital); border-color: rgba(47, 212, 167, 0.32); }
   .jc-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
   .jc-rows { margin-top: 7px; }
-  .jc-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    font-size: 11px; color: var(--text-muted);
-    padding: 4.5px 0; border-top: 1px solid var(--border);
-  }
+  .jc-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11px; color: var(--text-muted); padding: 4.5px 0; border-top: 1px solid var(--border); }
   .jc-row b { color: var(--text-secondary); font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
   .jc-row b .ok { color: var(--vital); display: inline-flex; }
-  .jc-big {
-    font-family: var(--font-mono); font-variant-numeric: tabular-nums;
-    font-size: 19px; font-weight: 500; color: var(--light);
-    letter-spacing: -0.02em; margin-top: 5px;
-  }
-  .jc-foot {
-    margin-top: auto; padding-top: 8px;
-    display: flex; align-items: center; gap: 6px;
-    font-size: 10.5px; font-weight: 700; color: var(--vital);
-  }
+  .jc-big { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 19px; font-weight: 500; color: var(--light); letter-spacing: -0.02em; margin-top: 5px; }
+  .jc-foot { margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: var(--vital); }
   .jc-foot.pending { color: var(--warning); }
   .jc-foot .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-
-  /* the quiet doctor/patient mark on the consultation card */
-  .jc-pair {
-    display: flex; align-items: center; justify-content: center; gap: 12px;
-    margin-top: 9px; padding: 7px 0;
-    border-top: 1px solid var(--border);
-    color: var(--text-muted);
-  }
+  .jc-pair { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 9px; padding: 7px 0; border-top: 1px solid var(--border); color: var(--text-muted); }
   .jc-pair .p-doc { color: var(--vital); }
-  .jc-pair .p-line {
-    flex: 0 0 26px; height: 1px;
-    background: linear-gradient(90deg, var(--accent-border), rgba(47, 212, 167, 0.4));
-  }
-
-  /* ── The closing line ────────────────────────────────────── */
+  .jc-pair .p-line { flex: 0 0 26px; height: 1px; background: linear-gradient(90deg, var(--accent-border), rgba(47, 212, 167, 0.4)); }
   .jfinal {
-    position: absolute; left: 0; right: 0; top: 96px;
-    text-align: center;
-    font-size: 13px; font-weight: 700; color: var(--vital);
-    opacity: 0; transform: translateY(7px);
-    transition: opacity .6s ease, transform .6s cubic-bezier(.22,.9,.3,1);
-    pointer-events: none;
+    position: absolute; left: 0; right: 0; top: 96px; text-align: center; font-size: 13px; font-weight: 700; color: var(--vital);
+    opacity: 0; transform: translateY(7px); transition: opacity .6s ease, transform .6s cubic-bezier(.22,.9,.3,1); pointer-events: none;
   }
   .jtrack.is-complete .jfinal { opacity: 1; transform: none; transition-delay: .5s; }
 
-  /* ── Footer ──────────────────────────────────────────────── */
-  .stage-foot {
-    width: 100%;
-    max-width: 1180px;
-    margin-top: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    animation: rise 0.7s ease 1.55s both;
-  }
-  .foot-note { font-size: 12px; color: var(--text-muted); }
-
-  /* ── Responsive ──────────────────────────────────────────── */
-  @media (max-width: 1080px) { .stack-side { display: none; } }
-
   @media (max-width: 1040px) and (min-width: 881px) {
-    .jtrack { padding-top: 174px; }
-    .jrail, .jecg { top: 193px; }
-    .jcardstage { height: 136px; }
-    .jcard { width: 198px; max-height: 136px; }
-    .jcard.wide { width: 226px; }
-    .jfinal { top: 88px; }
-    .jlabel { font-size: 10.5px; }
+    .jtrack { padding-top: 174px; } .jrail, .jecg { top: 193px; } .jcardstage { height: 136px; }
+    .jcard { width: 198px; max-height: 136px; } .jcard.wide { width: 226px; } .jfinal { top: 88px; } .jlabel { font-size: 10.5px; }
   }
-
-  /* Tablet and phone — the pathway stands up and the pulse runs down it */
   @media (max-width: 880px) {
     .jcardstage, .jglow, .jecg, .jfinal, .jpulse { display: none; }
     .jtrack { padding-top: 0; overflow: visible; }
-
     .jrail {
-      left: 18px; right: auto; top: 0; bottom: 0;
-      width: 2px; height: auto;
+      left: 18px; right: auto; top: 0; bottom: 0; width: 2px; height: auto;
       -webkit-mask-image: linear-gradient(180deg, transparent, #000 4%, #000 96%, transparent);
               mask-image: linear-gradient(180deg, transparent, #000 4%, #000 96%, transparent);
     }
-    .jrail-fill {
-      width: 2px; height: var(--sy, 0px);
-      background: linear-gradient(180deg, rgba(91, 157, 255, 0.14), var(--accent));
-    }
+    .jrail-fill { width: 2px; height: var(--sy, 0px); background: linear-gradient(180deg, rgba(91, 157, 255, 0.14), var(--accent)); }
     .jtrack.is-complete .jrail-fill { background: linear-gradient(180deg, rgba(47, 212, 167, 0.14), var(--vital)); }
-
     .jnodes { flex-direction: column; align-items: stretch; }
     .jnode { flex-direction: row; align-items: flex-start; gap: 14px; padding: 6px 0; }
     .jmeta { align-items: flex-start; flex: 1 1 auto; padding-top: 10px; }
     .jlabel { text-align: left; font-size: 13px; }
-
     .jdetail { display: block; }
     .jdetail:empty { display: none; }
-    .jdetail .jc-in {
-      margin-top: 9px;
-      padding: 11px 13px;
-      border-radius: 12px;
-      background: rgba(13, 22, 38, 0.78);
-      border: 1px solid var(--border);
-      animation: jmorph .45s cubic-bezier(.22,.9,.3,1) both;
-    }
-    @keyframes jmorph {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: none; }
-    }
+    .jdetail .jc-in { margin-top: 9px; padding: 11px 13px; border-radius: 12px; background: var(--surface-input); border: 1px solid var(--border); animation: jmorph .45s cubic-bezier(.22,.9,.3,1) both; }
+    @keyframes jmorph { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     .jdetail .jc-foot { padding-top: 9px; }
     .jdetail .jc-big { font-size: 22px; }
   }
-
-  @media (max-width: 560px) {
-    .stage { padding: 18px 16px 34px; }
-    .auth-card { padding: 24px 20px; }
-    .brand-sub { display: none; }
-    .stage-foot { flex-direction: column; gap: 6px; text-align: center; }
-  }
-
-  /* No motion: the pathway is shown already walked, and held there */
   @media (prefers-reduced-motion: reduce) {
     .jtrack.is-complete .jecg { animation: none; clip-path: inset(0 0 0 0); }
     .jcard, .jcard::after, .jfinal { transition: none; }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     WHO WE ARE
+     ═══════════════════════════════════════════════════════ */
+  .about-section { border-top: 1px solid var(--border); }
+  .about-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(30px, 5vw, 64px); align-items: start; margin-top: 34px; }
+  @media (max-width: 880px) { .about-grid { grid-template-columns: 1fr; } }
+  .about-copy p { font-size: 15px; color: var(--text-muted); line-height: 1.65; margin-top: 14px; }
+  .about-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 28px; }
+  @media (max-width: 560px) { .about-stats { grid-template-columns: 1fr 1fr; } }
+  .about-stat { background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 16px; }
+  .about-stat b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.01em; color: var(--light); }
+  .about-stat span { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+  .value-list { display: flex; flex-direction: column; gap: 14px; }
+  .value-card { display: flex; gap: 14px; padding: 18px; background: var(--surface-input); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .value-icon {
+    width: 40px; height: 40px; flex: 0 0 40px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);
+  }
+  .value-card.vital .value-icon { background: var(--vital-soft); color: var(--vital); border-color: rgba(47,212,167,0.32); }
+  .value-card.warn .value-icon { background: var(--warning-bg); color: var(--warning); border-color: rgba(234,179,74,0.32); }
+  .value-title { font-size: 14.5px; font-weight: 700; }
+  .value-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+  /* ═══════════════════════════════════════════════════════
+     GET STARTED / AUTH (unchanged card from the sign-in page)
+     ═══════════════════════════════════════════════════════ */
+  .signin-section { border-top: 1px solid var(--border); }
+  .signin-shell {
+    display: grid; grid-template-columns: 1fr auto; gap: clamp(24px, 6vw, 70px);
+    align-items: center; margin-top: 30px;
+  }
+  @media (max-width: 980px) { .signin-shell { grid-template-columns: 1fr; justify-items: center; text-align: center; } .signin-shell .section-head { max-width: 560px; } }
+
+  .stack { position: relative; width: 100%; max-width: 1020px; display: flex; align-items: flex-start; justify-content: center; }
+  .stack-side {
+    position: absolute; top: 30px; width: 300px; padding: 20px; border-radius: var(--radius-lg);
+    background: var(--surface-input); border: 1px solid var(--border); box-shadow: 0 30px 70px -30px rgba(0,0,0,0.5);
+    pointer-events: none; opacity: 0; filter: blur(1.5px); z-index: 0;
+  }
+  .stack-side.left { left: -300px; animation: slide-left 1s cubic-bezier(0.22, 0.9, 0.3, 1) .1s both; }
+  .stack-side.right { right: -300px; animation: slide-right 1s cubic-bezier(0.22, 0.9, 0.3, 1) .2s both; }
+  @keyframes slide-left { from { opacity: 0; transform: translateX(60px) scale(0.94); } to { opacity: 0.5; transform: translateX(calc(var(--px, 0) * 10px)) scale(0.94) rotate(-1.4deg); } }
+  @keyframes slide-right { from { opacity: 0; transform: translateX(-60px) scale(0.94); } to { opacity: 0.5; transform: translateX(calc(var(--px, 0) * 10px)) scale(0.94) rotate(1.4deg); } }
+  .side-title { font-size: 13.5px; font-weight: 700; color: var(--text-secondary); }
+  .side-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .side-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); }
+  .side-row:first-of-type { margin-top: 14px; }
+  .side-row b { color: var(--text-secondary); font-weight: 600; }
+  .side-token { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 500; color: var(--light); letter-spacing: -0.03em; margin-top: 10px; }
+  @media (max-width: 1180px) { .stack-side { display: none; } }
+
+  .auth-col { position: relative; z-index: 2; width: 100%; max-width: 396px; }
+  .auth-card {
+    position: relative; background: var(--surface-input);
+    border: 1px solid var(--border-strong); border-radius: 18px; padding: 28px 26px;
+    backdrop-filter: blur(14px); box-shadow: var(--shadow-lg);
+  }
+  .auth-card::after {
+    content: ''; position: absolute; inset: -1px; border-radius: 19px; padding: 1px;
+    background: conic-gradient(from var(--brd), transparent 0 58%, rgba(140, 190, 255, 0.55) 74%, rgba(210, 232, 255, 0.9) 80%, rgba(140, 190, 255, 0.55) 86%, transparent 96%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: brd-spin 8s linear infinite; pointer-events: none;
+  }
+  @keyframes brd-spin { to { --brd: 360deg; } }
+  .auth-card::before { content: ''; position: absolute; top: -1px; left: 14%; right: 14%; height: 1px; z-index: 1; background: linear-gradient(90deg, transparent, rgba(160, 200, 255, 0.85), transparent); }
+  .tick { position: absolute; width: 9px; height: 9px; border: 1px solid rgba(120, 165, 235, 0.55); }
+  .tick.tl { top: -5px; left: -5px; border-right: 0; border-bottom: 0; }
+  .tick.tr { top: -5px; right: -5px; border-left: 0; border-bottom: 0; }
+  .tick.bl { bottom: -5px; left: -5px; border-right: 0; border-top: 0; }
+  .tick.br { bottom: -5px; right: -5px; border-left: 0; border-top: 0; }
+
+  .auth-title { margin-bottom: 20px; }
+  .auth-title h2 { font-size: 20px; margin: 0; }
+  .auth-title p { font-size: 13.5px; margin-top: 5px; color: var(--text-muted); }
+
+  .segmented { width: 100%; margin-bottom: 20px; position: relative; display: flex; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px; }
+  .segmented button { flex: 1; position: relative; z-index: 1; background: none; border: none; padding: 9px 0; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+  .segmented button.active { color: var(--text); }
+  .seg-thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: var(--surface-hover); border: 1px solid var(--border-strong); transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.5, 1); z-index: 0; }
+  .seg-thumb.right { transform: translateX(100%); }
+
+  .input-wrap { position: relative; }
+  .input-wrap input { padding-left: 38px; }
+  .input-wrap.has-toggle input { padding-right: 44px; }
+  .input-wrap .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #5b6d8e; pointer-events: none; display: flex; transition: color 0.16s ease; }
+  .input-wrap:focus-within .input-icon { color: var(--accent); }
+  .input-wrap .eye-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; width: auto; color: #5b6d8e; display: flex; }
+  .input-wrap .eye-toggle:hover { color: var(--text-secondary); background: var(--surface-hover); }
+  .field input.autofilling { border-color: var(--accent); box-shadow: 0 0 0 3.5px var(--accent-ring), 0 0 26px -8px var(--accent-glow); }
+
+  .auth-pane { animation: pane-in 0.28s ease both; }
+  @keyframes pane-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .btn-spinner { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(4, 16, 31, 0.3); border-top-color: #04101f; animation: spin 0.7s linear infinite; display: none; }
+  .btn-spinner.show { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .auth-note { text-align: center; margin-top: 15px; font-size: 12.5px; color: var(--text-muted); line-height: 1.55; }
+
+  .demo { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border-strong); }
+  .demo-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; }
+  .demo-tag { font-size: 10.5px; font-weight: 700; color: var(--warning); background: var(--warning-bg); border: 1px solid rgba(234, 179, 74, 0.25); border-radius: 999px; padding: 2px 8px; }
+  .demo-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .demo-btn {
+    position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 11px 6px 10px; border-radius: var(--radius); background: var(--surface-input); border: 1px solid var(--border-strong);
+    color: var(--text-secondary); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease, transform 0.12s ease, box-shadow 0.16s ease;
+  }
+  .demo-btn svg { color: #6f86ab; transition: color 0.16s ease, transform 0.2s ease; }
+  .demo-btn:hover:not(:disabled) { border-color: var(--accent-border); background: var(--surface-hover); color: var(--text); transform: translateY(-2px); box-shadow: 0 10px 24px -14px var(--accent-glow); }
+  .demo-btn:hover:not(:disabled) svg { color: var(--accent); transform: translateY(-1px); }
+  .demo-btn:active:not(:disabled) { transform: translateY(0); }
+  .demo-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .demo-btn.running { opacity: 1; border-color: var(--accent); color: var(--text); box-shadow: 0 0 0 3px var(--accent-ring); }
+  .demo-btn.running svg { color: var(--accent); }
+  .demo-btn.running::after { content: ''; position: absolute; inset: 0; transform: translateX(-120%); background: linear-gradient(100deg, transparent 20%, rgba(140, 190, 255, 0.28) 50%, transparent 80%); animation: btn-sweep 1.1s ease infinite; }
+  @keyframes btn-sweep { to { transform: translateX(120%); } }
+  .demo-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 10px; text-align: center; line-height: 1.5; }
+
+  .auth-secure { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 18px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+
+  /* ═══════════════════════════════════════════════════════
+     CONTACT
+     ═══════════════════════════════════════════════════════ */
+  .contact-section { border-top: 1px solid var(--border); }
+  .contact-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: clamp(30px, 5vw, 64px); margin-top: 34px; align-items: start; }
+  @media (max-width: 880px) { .contact-grid { grid-template-columns: 1fr; } }
+  .contact-info-row { display: flex; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
+  .contact-info-row:first-child { border-top: none; padding-top: 0; }
+  .contact-info-icon { width: 38px; height: 38px; flex: 0 0 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); }
+  .contact-info-label { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+  .contact-info-value { font-size: 14.5px; font-weight: 700; margin-top: 2px; }
+  .contact-info-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .contact-form-card .grid-2 { margin-bottom: 0; }
+
+  /* ═══════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════ */
+  .site-footer { border-top: 1px solid var(--border); padding: 52px 0 0; margin-top: 20px; }
+  .footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 32px; padding-bottom: 36px; }
+  @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+  .footer-brand p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin-top: 12px; max-width: 30ch; }
+  .footer-col h4 { font-size: 12.5px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-secondary); margin: 0 0 14px; }
+  .footer-col a { display: block; font-size: 13.5px; color: var(--text-muted); padding: 6px 0; transition: color .15s ease; }
+  .footer-col a:hover { color: var(--accent); }
+  .footer-social { display: flex; gap: 10px; margin-top: 16px; }
+  .footer-social a { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: var(--surface-hover); border: 1px solid var(--border-strong); color: var(--text-secondary); padding: 0; }
+  .footer-social a:hover { color: var(--accent); border-color: var(--accent-border); }
+  .footer-bottom {
+    border-top: 1px solid var(--border); padding: 18px 0 calc(18px + env(safe-area-inset-bottom, 0px));
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .footer-bottom span { font-size: 12px; color: var(--text-muted); }
+  .footer-legal { display: flex; gap: 18px; }
+  .footer-legal a { font-size: 12px; color: var(--text-muted); }
+  .footer-legal a:hover { color: var(--text); }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 0 18px; }
   }
 </style>
 </head>
@@ -869,300 +664,486 @@
 <div class="layer-beam" aria-hidden="true"></div>
 <div class="layer-scan" aria-hidden="true"></div>
 
-<main class="stage">
-
-  <header class="stage-head">
-    <div class="brand">
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header class="site-header" id="site-header">
+  <div class="wrap">
+    <a class="brand" href="#home">
       <span class="brand-mark" aria-hidden="true">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
           <rect x="10" y="3.5" width="4" height="17" rx="1.6" fill="#8fbcff"/>
           <rect x="3.5" y="10" width="17" height="4" rx="1.6" fill="#8fbcff"/>
         </svg>
       </span>
-      <span>
-        <span class="brand-name">PulseCare</span>
-        <div class="brand-sub">Outpatient services</div>
-      </span>
+      <span class="brand-name">PulseCare</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a class="nav-link-top active" href="#home">Home</a>
+      <a class="nav-link-top" href="#journey">How it works</a>
+      <a class="nav-link-top" href="#about">Who we are</a>
+      <a class="nav-link-top" href="#contact">Contact</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+      <a class="btn btn-ghost btn-inline" href="#signin" onclick="showTab('login')">Sign in</a>
+      <a class="btn btn-primary btn-inline" href="#signin" onclick="showTab('signup')">Get started</a>
+      <button class="icon-btn nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
     </div>
+  </div>
+</header>
 
-    <span class="status-chip"><i></i>General Medicine · now serving <span class="data chip-token" id="chip-token">A-118</span></span>
-  </header>
+<div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+  <a class="nav-link-top" href="#home">Home</a>
+  <a class="nav-link-top" href="#journey">How it works</a>
+  <a class="nav-link-top" href="#about">Who we are</a>
+  <a class="nav-link-top" href="#contact">Contact</a>
+  <div class="header-actions">
+    <a class="btn btn-secondary" href="#signin" onclick="showTab('login')">Sign in</a>
+    <a class="btn btn-primary" href="#signin" onclick="showTab('signup')">Get started</a>
+  </div>
+</div>
 
-  <section class="hero">
-    <div class="hero-eyebrow">Clinic access</div>
-    <h1>PulseCare<span class="shine" aria-hidden="true">PulseCare</span></h1>
-    <p class="hero-sub">Book with your clinic, watch the queue move in real time, and keep every prescription in one record.</p>
-    <span class="hero-pulse-badge"><i></i>One visit, end to end</span>
-  </section>
+<main>
 
-  <!-- ══════════════ The patient journey ══════════════ -->
-  <section class="journey" aria-label="How a visit moves through PulseCare">
-
-    <div class="jtrack" id="jtrack">
-
-      <!-- light follows the pulse -->
-      <div class="jglow" aria-hidden="true"></div>
-
-      <!-- the card for whichever station is active -->
-      <div class="jcardstage" aria-hidden="true">
-        <div class="jcard-pos"><div class="jcard" id="jcard"></div></div>
+  <!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+  <section class="hero" id="home">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="status-chip"><i></i>General Medicine · now serving <span class="chip-token" id="chip-token">A-118</span></span>
+        <h1>One clinic visit, fully connected.</h1>
+        <p class="lead">Book with your clinic, watch the queue move in real time, and keep every prescription and report in one record — from the front desk to the pharmacy counter.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#signin" onclick="showTab('signup')">Create your account</a>
+          <a class="btn btn-secondary" href="#journey">See how it works</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><b>12,400+</b><span>Visits tracked</span></div>
+          <div class="hero-stat"><b>38</b><span>Partner clinics</span></div>
+          <div class="hero-stat"><b>4.8/5</b><span>Patient rating</span></div>
+        </div>
       </div>
 
-      <!-- the closing line -->
-      <div class="jfinal" aria-hidden="true">One connected journey.</div>
-
-      <!-- the pathway -->
-      <div class="jrail" aria-hidden="true"><span class="jrail-fill"></span></div>
-      <div class="jecg" aria-hidden="true"></div>
-
-      <!-- the pulse -->
-      <div class="jpulse" id="jpulse" aria-hidden="true">
-        <svg viewBox="0 0 26 36" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
-          <g class="body">
-            <circle cx="13" cy="5.6" r="4.3"/>
-            <path d="M13 11.4v10.8"/>
-          </g>
-          <g class="limb leg-a"><path d="M13 22.2 9 32"/></g>
-          <g class="limb leg-b"><path d="M13 22.2 17 32"/></g>
-          <g class="limb arm-a"><path d="M13 14.4 8.8 19.8"/></g>
-          <g class="limb arm-b"><path d="M13 14.4 17.2 19.8"/></g>
+      <div class="brain-stage" aria-hidden="true">
+        <div class="brain-glow"></div>
+        <svg viewBox="0 0 620 480">
+          <defs>
+            <filter id="nodeGlow" x="-200%" y="-200%" width="500%" height="500%">
+              <feGaussianBlur stdDeviation="2.1" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <g class="brain-rotor" id="brain-rotor"></g>
         </svg>
       </div>
+    </div>
+  </section>
 
-      <!-- the stations -->
-      <div class="jnodes" id="jnodes">
+  <!-- ═══════════════════════════════ JOURNEY ═══════════════════════════════ -->
+  <section class="journey-section" id="journey">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow"><i></i>How PulseCare works</span>
+        <h2>One patient, one connected pathway.</h2>
+        <p>Watch a single visit move from check-in to a closed record — the same trip every patient takes through PulseCare.</p>
+      </div>
 
-        <div class="jnode" data-i="0">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.2" r="3.4"/><path d="M5.4 20c1.2-3.5 3.7-5.2 6.6-5.2s5.4 1.7 6.6 5.2"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Patient</span><span class="jdetail"></span></span>
+      <div class="journey" aria-label="How a visit moves through PulseCare">
+        <div class="jtrack" id="jtrack">
+          <div class="jglow" aria-hidden="true"></div>
+          <div class="jcardstage" aria-hidden="true">
+            <div class="jcard-pos"><div class="jcard" id="jcard"></div></div>
+          </div>
+          <div class="jfinal" aria-hidden="true">One connected journey.</div>
+          <div class="jrail" aria-hidden="true"><span class="jrail-fill"></span></div>
+          <div class="jecg" aria-hidden="true"></div>
+          <div class="jpulse" id="jpulse" aria-hidden="true">
+            <svg viewBox="0 0 26 36" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <g class="body"><circle cx="13" cy="5.6" r="4.3"/><path d="M13 11.4v10.8"/></g>
+              <g class="limb leg-a"><path d="M13 22.2 9 32"/></g>
+              <g class="limb leg-b"><path d="M13 22.2 17 32"/></g>
+              <g class="limb arm-a"><path d="M13 14.4 8.8 19.8"/></g>
+              <g class="limb arm-b"><path d="M13 14.4 17.2 19.8"/></g>
+            </svg>
+          </div>
+
+          <div class="jnodes" id="jnodes">
+            <div class="jnode" data-i="0">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.2" r="3.4"/><path d="M5.4 20c1.2-3.5 3.7-5.2 6.6-5.2s5.4 1.7 6.6 5.2"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Patient</span><span class="jdetail"></span></span>
+            </div>
+            <div class="jnode" data-i="1">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.6" y="5" width="16.8" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.6 10h16.8"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Appointment</span><span class="jdetail"></span></span>
+            </div>
+            <div class="jnode" data-i="2">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.4" cy="6.5" r="1.5"/><circle cx="4.4" cy="17.5" r="1.5"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Queue</span><span class="jdetail"></span></span>
+            </div>
+            <div class="jnode" data-i="3">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 3v5.2a4.6 4.6 0 0 0 9.2 0V3"/><path d="M11.1 12.8v2.6a4 4 0 0 0 8 0v-1.2"/><circle cx="19.1" cy="10.6" r="2"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Doctor</span><span class="jdetail"></span></span>
+            </div>
+            <div class="jnode" data-i="4">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8.5L19 7.6V21H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h5"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Prescription</span><span class="jdetail"></span></span>
+            </div>
+            <div class="jnode" data-i="5">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.6" y="8.4" width="18.8" height="7.2" rx="3.6" transform="rotate(-42 12 12)"/><path d="M9.1 8.6 15.4 15"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Medicines</span><span class="jdetail"></span></span>
+            </div>
+            <div class="jnode" data-i="6">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8.5L19 7.6V21H6z"/><path d="M14 3v5h5"/><path d="M9.4 17.4v-3M12.4 17.4v-5.4M15.4 17.4v-2"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Reports</span><span class="jdetail"></span></span>
+            </div>
+            <div class="jnode" data-i="7">
+              <span class="jdot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.4l2.6 2.6 5-5.4"/></svg></span>
+              <span class="jmeta"><span class="jlabel">Care complete</span><span class="jdetail"></span></span>
+            </div>
+          </div>
         </div>
-
-        <div class="jnode" data-i="1">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.6" y="5" width="16.8" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.6 10h16.8"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Appointment</span><span class="jdetail"></span></span>
-        </div>
-
-        <div class="jnode" data-i="2">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.4" cy="6.5" r="1.5"/><circle cx="4.4" cy="17.5" r="1.5"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Queue</span><span class="jdetail"></span></span>
-        </div>
-
-        <div class="jnode" data-i="3">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 3v5.2a4.6 4.6 0 0 0 9.2 0V3"/><path d="M11.1 12.8v2.6a4 4 0 0 0 8 0v-1.2"/><circle cx="19.1" cy="10.6" r="2"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Doctor</span><span class="jdetail"></span></span>
-        </div>
-
-        <div class="jnode" data-i="4">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8.5L19 7.6V21H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h5"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Prescription</span><span class="jdetail"></span></span>
-        </div>
-
-        <div class="jnode" data-i="5">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.6" y="8.4" width="18.8" height="7.2" rx="3.6" transform="rotate(-42 12 12)"/><path d="M9.1 8.6 15.4 15"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Medicines</span><span class="jdetail"></span></span>
-        </div>
-
-        <div class="jnode" data-i="6">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8.5L19 7.6V21H6z"/><path d="M14 3v5h5"/><path d="M9.4 17.4v-3M12.4 17.4v-5.4M15.4 17.4v-2"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Reports</span><span class="jdetail"></span></span>
-        </div>
-
-        <div class="jnode" data-i="7">
-          <span class="jdot">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.4l2.6 2.6 5-5.4"/></svg>
-          </span>
-          <span class="jmeta"><span class="jlabel">Care complete</span><span class="jdetail"></span></span>
-        </div>
-
       </div>
     </div>
   </section>
 
-  <section class="stack">
-
-    <!-- Left card: the live queue board -->
-    <aside class="stack-side left" aria-hidden="true">
-      <div class="side-title">General Medicine</div>
-      <div class="side-meta">Block B · Ground floor</div>
-      <div class="side-token" id="side-token">A-118</div>
-      <div class="side-row"><span>A-119</span><b>~4 min</b></div>
-      <div class="side-row"><span>A-120</span><b>~11 min</b></div>
-      <div class="side-row"><span>A-121</span><b>~18 min</b></div>
-    </aside>
-
-    <!-- Right card: a prescription record -->
-    <aside class="stack-side right" aria-hidden="true">
-      <div class="side-title">Prescription · 14 Sep</div>
-      <div class="side-meta">Dr. Anjali Sharma</div>
-      <div class="side-row"><span>Amoxicillin 500mg</span><b>5 days</b></div>
-      <div class="side-row"><span>After food</span><b>1-0-1</b></div>
-      <div class="side-row"><span>Review</span><b>21 Sep</b></div>
-    </aside>
-
-    <!-- ══════════════ Sign in ══════════════ -->
-    <div class="auth-col">
-      <div class="auth-card">
-        <span class="tick tl"></span><span class="tick tr"></span>
-        <span class="tick bl"></span><span class="tick br"></span>
-
-        <div class="auth-title">
-          <h2 id="auth-heading">Sign in to PulseCare</h2>
-          <p id="auth-sub">Use the email you gave at the clinic desk.</p>
+  <!-- ═══════════════════════════════ WHO WE ARE ═══════════════════════════════ -->
+  <section class="section-pad about-section" id="about">
+    <div class="wrap">
+      <span class="eyebrow"><i></i>Who we are</span>
+      <div class="about-grid">
+        <div class="about-copy">
+          <h2 style="font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -0.02em; margin: 10px 0 0;">Built by people who've sat in the waiting room too.</h2>
+          <p>PulseCare started with a front desk that was still calling out token numbers by hand and a doctor's queue that lived on a whiteboard. We built the system we wished that clinic had — one place where check-in, the live queue, the consultation, and the record all agree with each other.</p>
+          <p>We work directly with clinic staff, not just IT departments, because the person managing a queue on a busy Monday morning is the one who knows what the software actually needs to do.</p>
+          <div class="about-stats">
+            <div class="about-stat"><b>2021</b><span>Founded</span></div>
+            <div class="about-stat"><b>38</b><span>Clinics onboard</span></div>
+            <div class="about-stat"><b>~9 min</b><span>Avg. wait reduced</span></div>
+          </div>
         </div>
 
-        <div class="segmented" id="tabs" role="tablist">
-          <span class="seg-thumb" id="seg-thumb" aria-hidden="true"></span>
-          <button id="tab-login" class="active" role="tab" aria-selected="true" onclick="showTab('login')">Sign in</button>
-          <button id="tab-signup" role="tab" aria-selected="false" onclick="showTab('signup')">Create account</button>
+        <div class="value-list">
+          <div class="value-card">
+            <span class="value-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 19 6v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg></span>
+            <div><div class="value-title">Records that stay accurate</div><div class="value-desc">Every prescription, report, and visit stays attached to the right patient and the right doctor — no re-entering the same details twice.</div></div>
+          </div>
+          <div class="value-card vital">
+            <span class="value-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 2 3 14h8l-1 8 11-13h-8z"/></svg></span>
+            <div><div class="value-title">A queue people can trust</div><div class="value-desc">Patients see their real position, live — so the waiting room stops guessing and staff stop repeating themselves.</div></div>
+          </div>
+          <div class="value-card warn">
+            <span class="value-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4"/></svg></span>
+            <div><div class="value-title">Built with clinic staff</div><div class="value-desc">Front desk, doctors, and pharmacy teams shape every feature before it ships — not after.</div></div>
+          </div>
         </div>
-
-        <div id="alert-box" role="status" aria-live="polite"></div>
-
-        <!-- ── SIGN IN ── -->
-        <form id="login-form" class="auth-pane">
-          <div class="field">
-            <label for="login-email">Email</label>
-            <div class="input-wrap">
-              <span class="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 7.5 12 13l7.5-5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" required>
-            </div>
-          </div>
-
-          <div class="field" style="margin-bottom: 20px;">
-            <label for="login-password">Password</label>
-            <div class="input-wrap has-toggle">
-              <span class="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg>
-              </span>
-              <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" required>
-              <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('login-password', this)" aria-label="Show password">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.5 12C5 7.5 8.3 5.2 12 5.2S19 7.5 21.5 12C19 16.5 15.7 18.8 12 18.8S5 16.5 2.5 12Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="login-btn">
-            <span class="btn-spinner" id="login-spinner"></span>
-            <span id="login-btn-text">Sign in</span>
-          </button>
-
-          <!-- ── Demo logins ── remove this block before going live ── -->
-          <div class="demo" id="demo-block">
-            <div class="demo-head">
-              <span>Sign in with a test account</span>
-              <span class="demo-tag">Dev only</span>
-            </div>
-            <div class="demo-row">
-              <button type="button" class="demo-btn" data-role="patient" onclick="demoLogin('patient', this)">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                Patient
-              </button>
-              <button type="button" class="demo-btn" data-role="doctor" onclick="demoLogin('doctor', this)">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M7 3v5a5 5 0 0 0 10 0V3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 13v3a4 4 0 0 0 8 0v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="20" cy="11" r="2" stroke="currentColor" stroke-width="1.7"/></svg>
-                Doctor
-              </button>
-              <button type="button" class="demo-btn" data-role="admin" onclick="demoLogin('admin', this)">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Admin
-              </button>
-            </div>
-            <p class="demo-hint">Fills the form and signs in straight away.</p>
-          </div>
-        </form>
-
-        <!-- ── CREATE ACCOUNT ── -->
-        <form id="signup-form" class="hidden auth-pane">
-          <div class="field">
-            <label for="signup-name">Full name</label>
-            <div class="input-wrap">
-              <span class="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-              </span>
-              <input type="text" id="signup-name" placeholder="As written on your ID" autocomplete="name" required>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="signup-email">Email</label>
-            <div class="input-wrap">
-              <span class="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 7.5 12 13l7.5-5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" required>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="signup-password">Password</label>
-            <div class="input-wrap has-toggle">
-              <span class="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg>
-              </span>
-              <input type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password" minlength="6" required>
-              <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('signup-password', this)" aria-label="Show password">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.5 12C5 7.5 8.3 5.2 12 5.2S19 7.5 21.5 12C19 16.5 15.7 18.8 12 18.8S5 16.5 2.5 12Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
-              </button>
-            </div>
-            <div class="field-hint">Use at least 6 characters.</div>
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="signup-btn">
-            <span class="btn-spinner" id="signup-spinner"></span>
-            <span id="signup-btn-text">Create account</span>
-          </button>
-
-          <p class="auth-note">This creates a patient account. Doctors and front-desk staff are added by a clinic admin.</p>
-        </form>
-      </div>
-
-      <div class="auth-secure">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
-        Encrypted connection · records visible only to your clinic
       </div>
     </div>
   </section>
 
+  <!-- ═══════════════════════════════ GET STARTED / AUTH ═══════════════════════════════ -->
+  <section class="section-pad signin-section" id="signin">
+    <div class="wrap">
+      <div class="section-head" style="margin: 0 auto; text-align: center; max-width: 560px;">
+        <span class="eyebrow" style="justify-content:center; display:inline-flex;"><i></i>Get started</span>
+        <h2>Sign in, or set up your account.</h2>
+        <p>Patients can book their first appointment in a minute. Doctors and front-desk staff are added by a clinic admin.</p>
+      </div>
 
-  <footer class="stage-foot">
-    <span class="foot-note">Queue updating live</span>
-    <span class="foot-note">PulseCare Health Systems</span>
-  </footer>
+      <div class="stack mt-24">
+        <aside class="stack-side left" aria-hidden="true">
+          <div class="side-title">General Medicine</div>
+          <div class="side-meta">Block B · Ground floor</div>
+          <div class="side-token" id="side-token">A-118</div>
+          <div class="side-row"><span>A-119</span><b>~4 min</b></div>
+          <div class="side-row"><span>A-120</span><b>~11 min</b></div>
+          <div class="side-row"><span>A-121</span><b>~18 min</b></div>
+        </aside>
+
+        <aside class="stack-side right" aria-hidden="true">
+          <div class="side-title">Prescription · 14 Sep</div>
+          <div class="side-meta">Dr. Anjali Sharma</div>
+          <div class="side-row"><span>Amoxicillin 500mg</span><b>5 days</b></div>
+          <div class="side-row"><span>After food</span><b>1-0-1</b></div>
+          <div class="side-row"><span>Review</span><b>21 Sep</b></div>
+        </aside>
+
+        <div class="auth-col">
+          <div class="auth-card">
+            <span class="tick tl"></span><span class="tick tr"></span>
+            <span class="tick bl"></span><span class="tick br"></span>
+
+            <div class="auth-title">
+              <h2 id="auth-heading">Sign in to PulseCare</h2>
+              <p id="auth-sub">Use the email you gave at the clinic desk.</p>
+            </div>
+
+            <div class="segmented" id="tabs" role="tablist">
+              <span class="seg-thumb" id="seg-thumb" aria-hidden="true"></span>
+              <button id="tab-login" class="active" role="tab" aria-selected="true" onclick="showTab('login')">Sign in</button>
+              <button id="tab-signup" role="tab" aria-selected="false" onclick="showTab('signup')">Create account</button>
+            </div>
+
+            <div id="alert-box" role="status" aria-live="polite"></div>
+
+            <form id="login-form" class="auth-pane">
+              <div class="field">
+                <label for="login-email">Email</label>
+                <div class="input-wrap">
+                  <span class="input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 7.5 12 13l7.5-5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" required>
+                </div>
+              </div>
+              <div class="field" style="margin-bottom: 20px;">
+                <label for="login-password">Password</label>
+                <div class="input-wrap has-toggle">
+                  <span class="input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg></span>
+                  <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" required>
+                  <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('login-password', this)" aria-label="Show password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.5 12C5 7.5 8.3 5.2 12 5.2S19 7.5 21.5 12C19 16.5 15.7 18.8 12 18.8S5 16.5 2.5 12Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
+                  </button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" id="login-btn">
+                <span class="btn-spinner" id="login-spinner"></span>
+                <span id="login-btn-text">Sign in</span>
+              </button>
+
+              <div class="demo" id="demo-block">
+                <div class="demo-head"><span>Sign in with a test account</span><span class="demo-tag">Dev only</span></div>
+                <div class="demo-row">
+                  <button type="button" class="demo-btn" data-role="patient" onclick="demoLogin('patient', this)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                    Patient
+                  </button>
+                  <button type="button" class="demo-btn" data-role="doctor" onclick="demoLogin('doctor', this)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M7 3v5a5 5 0 0 0 10 0V3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 13v3a4 4 0 0 0 8 0v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="20" cy="11" r="2" stroke="currentColor" stroke-width="1.7"/></svg>
+                    Doctor
+                  </button>
+                  <button type="button" class="demo-btn" data-role="admin" onclick="demoLogin('admin', this)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Admin
+                  </button>
+                </div>
+                <p class="demo-hint">Fills the form and signs in straight away.</p>
+              </div>
+            </form>
+
+            <form id="signup-form" class="hidden auth-pane">
+              <div class="field">
+                <label for="signup-name">Full name</label>
+                <div class="input-wrap">
+                  <span class="input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+                  <input type="text" id="signup-name" placeholder="As written on your ID" autocomplete="name" required>
+                </div>
+              </div>
+              <div class="field">
+                <label for="signup-email">Email</label>
+                <div class="input-wrap">
+                  <span class="input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 7.5 12 13l7.5-5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" required>
+                </div>
+              </div>
+              <div class="field">
+                <label for="signup-password">Password</label>
+                <div class="input-wrap has-toggle">
+                  <span class="input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg></span>
+                  <input type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password" minlength="6" required>
+                  <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('signup-password', this)" aria-label="Show password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.5 12C5 7.5 8.3 5.2 12 5.2S19 7.5 21.5 12C19 16.5 15.7 18.8 12 18.8S5 16.5 2.5 12Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
+                  </button>
+                </div>
+                <div class="field-hint">Use at least 6 characters.</div>
+              </div>
+              <button type="submit" class="btn btn-primary" id="signup-btn">
+                <span class="btn-spinner" id="signup-spinner"></span>
+                <span id="signup-btn-text">Create account</span>
+              </button>
+              <p class="auth-note">This creates a patient account. Doctors and front-desk staff are added by a clinic admin.</p>
+            </form>
+          </div>
+
+          <div class="auth-secure">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+            Encrypted connection · records visible only to your clinic
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ CONTACT ═══════════════════════════════ -->
+  <section class="section-pad contact-section" id="contact">
+    <div class="wrap">
+      <span class="eyebrow"><i></i>Contact</span>
+      <div class="section-head" style="margin-top: 10px;">
+        <h2>Talk to the PulseCare team.</h2>
+        <p>Onboarding a clinic, reporting an issue, or just have a question — reach us directly and we'll get back within one business day.</p>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-info">
+          <div class="contact-info-row">
+            <span class="contact-info-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4.5 7.5 12 13l7.5-5.5"/></svg></span>
+            <div><div class="contact-info-label">Email</div><div class="contact-info-value">hello@pulsecare.example</div><div class="contact-info-sub">Clinic support & onboarding</div></div>
+          </div>
+          <div class="contact-info-row">
+            <span class="contact-info-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L7.9 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2.1z"/></svg></span>
+            <div><div class="contact-info-label">Phone</div><div class="contact-info-value">+91 22 4567 8900</div><div class="contact-info-sub">Mon–Sat, 9am–7pm IST</div></div>
+          </div>
+          <div class="contact-info-row">
+            <span class="contact-info-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10.5c0 6.4-9 12-9 12s-9-5.6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10.5" r="3"/></svg></span>
+            <div><div class="contact-info-label">Office</div><div class="contact-info-value">Block B, Andheri East</div><div class="contact-info-sub">Mumbai, Maharashtra, India</div></div>
+          </div>
+        </div>
+
+        <div class="card contact-form-card">
+          <div id="contact-alert-box"></div>
+          <form id="contact-form">
+            <div class="grid-2">
+              <div class="field">
+                <label for="contact-name">Full name</label>
+                <input type="text" id="contact-name" placeholder="Your name" required>
+              </div>
+              <div class="field">
+                <label for="contact-email">Email</label>
+                <input type="email" id="contact-email" placeholder="you@example.com" required>
+              </div>
+            </div>
+            <div class="field">
+              <label for="contact-subject">Subject</label>
+              <input type="text" id="contact-subject" placeholder="What's this about?" required>
+            </div>
+            <div class="field" style="margin-bottom: 20px;">
+              <label for="contact-message">Message</label>
+              <textarea id="contact-message" placeholder="Tell us a bit more…" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="contact-btn" style="width: auto; padding: 12px 26px;">
+              <span class="btn-spinner" id="contact-spinner"></span>
+              <span id="contact-btn-text">Send message</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
 
 </main>
 
+<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="10" y="3.5" width="4" height="17" rx="1.6" fill="#8fbcff"/><rect x="3.5" y="10" width="17" height="4" rx="1.6" fill="#8fbcff"/></svg>
+          </span>
+          <span class="brand-name">PulseCare</span>
+        </div>
+        <p>Queue, consultation, prescription and records — one connected system for outpatient clinics.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Twitter"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.7 11.7 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.2 4.2 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.2 8.2 0 0 1 2 18.4a11.6 11.6 0 0 0 6.3 1.8c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.1z"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.6c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9V21H9z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg></a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#home">Home</a>
+        <a href="#journey">How it works</a>
+        <a href="#signin">Get started</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#about">Who we are</a>
+        <a href="#contact">Contact</a>
+        <a href="#">Careers</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Get in touch</h4>
+        <a href="mailto:hello@pulsecare.example">hello@pulsecare.example</a>
+        <a href="tel:+912245678900">+91 22 4567 8900</a>
+        <a href="#contact">Contact form</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© <span id="footer-year"></span> PulseCare Health Systems. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Security</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
 <script src="js/api.js"></script>
 <script>
-  /* ═══════════════════════════════════════════════════════════
-     TEST ACCOUNTS — development only.
-     Change these to match the accounts seeded in your database,
-     then delete this block and #demo-block before going live.
-     ═══════════════════════════════════════════════════════════ */
-  const DEMO_ACCOUNTS = {
-    patient: { email: 'test1@gmail.com',      password: 'test1@'     },
-    doctor:  { email: 'sanketmehta@gmail.com', password: 'sanketmehta' },
-    admin:   { email: 'admin@clinic.com',      password: 'admin123'   }
-  };
-
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ── Pointer parallax — every background layer drifts by a
-  //    different amount, so the room has depth ────────────────
+  /* ═══════════════════════════════════════════════════════
+     TEST ACCOUNTS — development only.
+     ═══════════════════════════════════════════════════════ */
+  const DEMO_ACCOUNTS = {
+    patient: { email: 'test1@gmail.com',       password: 'test1@'      },
+    doctor:  { email: 'sanketmehta@gmail.com', password: 'sanketmehta' },
+    admin:   { email: 'admin@clinic.com',      password: 'admin123'    }
+  };
+
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  // ── Theme toggle ────────────────────────────────────────────
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-toggle-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+  }
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+  applyTheme(localStorage.getItem('theme') || 'dark');
+
+  // ── Header: solid on scroll + mobile nav ─────────────────────
+  (function () {
+    const header = document.getElementById('site-header');
+    const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const toggle = document.getElementById('nav-toggle');
+    const menu = document.getElementById('mobile-nav');
+    toggle.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+      menu.setAttribute('aria-hidden', String(!open));
+    });
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }));
+
+    // active nav link on scroll
+    const sections = ['home', 'journey', 'about', 'signin', 'contact'].map(id => document.getElementById(id)).filter(Boolean);
+    const links = Array.from(document.querySelectorAll('.nav-links .nav-link-top'));
+    if ('IntersectionObserver' in window && sections.length) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + en.target.id));
+        });
+      }, { rootMargin: '-40% 0px -50% 0px' });
+      sections.forEach(s => io.observe(s));
+    }
+  })();
+
+  // ── Pointer parallax ───────────────────────────────────────
   (function () {
     if (REDUCED || window.matchMedia('(pointer: coarse)').matches) return;
     const root = document.documentElement;
@@ -1194,9 +1175,8 @@
       s.style.left = (Math.random() * 100).toFixed(2) + '%';
       s.style.top = (Math.random() * 100).toFixed(2) + '%';
       s.style.opacity = 0.1 + Math.random() * 0.35;
-      if (REDUCED) {
-        s.style.animation = 'none';
-      } else {
+      if (REDUCED) { s.style.animation = 'none'; }
+      else {
         s.style.animationDuration = (3 + Math.random() * 6).toFixed(1) + 's';
         s.style.animationDelay = (Math.random() * 6).toFixed(1) + 's';
       }
@@ -1205,8 +1185,7 @@
     host.appendChild(frag);
   })();
 
-  // ── Grid cells light up one at a time, near the edges only,
-  //    so nothing flashes behind the form ─────────────────────
+  // ── Grid cells ──────────────────────────────────────────────
   (function () {
     const host = document.getElementById('cells');
     if (!host || REDUCED) return;
@@ -1215,8 +1194,6 @@
       const rows = Math.ceil(window.innerHeight / 160);
       const col = Math.floor(Math.random() * cols);
       const row = Math.floor(Math.random() * rows);
-      const cx = (col + 0.5) / cols;
-      if (cx > 0.3 && cx < 0.7) return;      // keep the centre clear
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.style.left = (col * 160) + 'px';
@@ -1226,7 +1203,7 @@
     }, 1700);
   })();
 
-  // ── The queue advances, so the page shows the product working ──
+  // ── Live queue token ────────────────────────────────────────
   (function () {
     if (REDUCED) return;
     let n = 118;
@@ -1245,13 +1222,157 @@
     }, 7000);
   })();
 
-  /* ═══════════════════════════════════════════════════════════
-     THE PATIENT JOURNEY
-     One clock (requestAnimationFrame) drives everything: the
-     figure's position, the lit length of the rail, the trace,
-     and the card that morphs from stage to stage. It only runs
-     while the section is on screen and the tab is in front.
-     ═══════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     BRAIN NETWORK — the hero's signature visual.
+     A field of nodes scattered inside a brain-shaped
+     silhouette (two hemispheres + stem), connected to their
+     nearest neighbours, with light pulses travelling along a
+     handful of the connections. Same accent/vital/warning
+     colors as the rest of the site — no new palette.
+     ═══════════════════════════════════════════════════════ */
+  (function () {
+    const rotor = document.getElementById('brain-rotor');
+    if (!rotor) return;
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs) => {
+      const n = document.createElementNS(NS, tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
+    };
+
+    // Two overlapping hemispheres + a small brainstem, with a
+    // thin central fissure so the split reads clearly.
+    const LOBES = [
+      { cx: 235, cy: 220, rx: 168, ry: 185 },
+      { cx: 385, cy: 220, rx: 168, ry: 185 },
+      { cx: 310, cy: 415, rx: 42,  ry: 58  }
+    ];
+    function inLobes(x, y) {
+      return LOBES.some(function (l) {
+        const dx = (x - l.cx) / l.rx, dy = (y - l.cy) / l.ry;
+        return dx * dx + dy * dy <= 1;
+      });
+    }
+    function accepted(x, y) {
+      if (Math.abs(x - 310) < 7 && y < 330) return false; // central fissure
+      return inLobes(x, y);
+    }
+
+    const NODE_COUNT = window.innerWidth < 640 ? 70 : 130;
+    const nodes = [];
+    let guard = 0;
+    while (nodes.length < NODE_COUNT && guard < NODE_COUNT * 40) {
+      guard++;
+      const x = 60 + Math.random() * 500;
+      const y = 30 + Math.random() * 440;
+      if (accepted(x, y)) nodes.push({ x: x, y: y });
+    }
+
+    // A recognizable brain silhouette: soft fill, a bold outline, a
+    // central fissure, and a handful of gyrus (fold) lines per
+    // hemisphere — drawn first, so the node/edge network reads as
+    // circuitry laid over an actual brain shape rather than a blob.
+    function lobePath(l) {
+      return [
+        'M', (l.cx - l.rx), l.cy,
+        'A', l.rx, l.ry, 0, 1, 1, (l.cx + l.rx), l.cy,
+        'A', l.rx, l.ry, 0, 1, 1, (l.cx - l.rx), l.cy, 'Z'
+      ].join(' ');
+    }
+    const outlineD = LOBES.map(lobePath).join(' ');
+
+    rotor.appendChild(el('path', { class: 'brain-fill', d: outlineD }));
+    rotor.appendChild(el('path', { class: 'brain-outline', d: outlineD }));
+
+    // Central longitudinal fissure between the two hemispheres.
+    rotor.appendChild(el('path', {
+      class: 'brain-fissure',
+      d: 'M 310 45 C 296 120, 322 170, 308 235 C 296 300, 322 350, 310 400'
+    }));
+
+    // Gyrus texture — a few soft curved folds per hemisphere.
+    const gyrusGroup = el('g');
+    [
+      'M 100 150 C 150 130, 210 140, 250 175',
+      'M 90 230 C 145 215, 215 225, 265 250',
+      'M 110 310 C 160 300, 210 310, 245 335',
+      'M 160 90 C 190 115, 205 150, 195 190',
+      'M 370 150 C 420 130, 475 145, 515 180',
+      'M 365 230 C 415 215, 470 225, 520 252',
+      'M 375 310 C 420 300, 465 312, 505 336',
+      'M 425 95 C 445 122, 452 158, 435 196'
+    ].forEach(function (d) { gyrusGroup.appendChild(el('path', { class: 'brain-gyrus', d: d })); });
+    rotor.appendChild(gyrusGroup);
+
+    // Connect each node to its 2–3 nearest neighbours.
+    const edges = [];
+    const seen = {};
+    nodes.forEach(function (a, i) {
+      const dists = nodes.map(function (b, j) {
+        return { j: j, d: (a.x - b.x) ** 2 + (a.y - b.y) ** 2 };
+      }).filter(function (o) { return o.j !== i; }).sort(function (p, q) { return p.d - q.d; });
+      const link = 2 + (Math.random() < 0.4 ? 1 : 0);
+      for (let k = 0; k < link && k < dists.length; k++) {
+        const j = dists[k].j;
+        if (dists[k].d > 60 * 60) continue;
+        const key = Math.min(i, j) + '-' + Math.max(i, j);
+        if (seen[key]) continue;
+        seen[key] = true;
+        edges.push({ a: nodes[i], b: nodes[j] });
+      }
+    });
+
+    const edgeGroup = el('g', { opacity: '0.28' });
+    edges.forEach(function (e) {
+      edgeGroup.appendChild(el('line', {
+        class: 'brain-edge', x1: e.a.x, y1: e.a.y, x2: e.b.x, y2: e.b.y, 'stroke-width': '0.7'
+      }));
+    });
+    rotor.appendChild(edgeGroup);
+
+    // Nodes.
+    const nodeGroup = el('g', { filter: 'url(#nodeGlow)' });
+    nodes.forEach(function (n) {
+      const roll = Math.random();
+      const color = roll < 0.78 ? 'var(--accent)' : roll < 0.94 ? 'var(--vital)' : 'var(--warning)';
+      nodeGroup.appendChild(el('circle', {
+        class: 'brain-node', cx: n.x, cy: n.y, r: (1.4 + Math.random() * 1.6).toFixed(2),
+        fill: color, opacity: (0.45 + Math.random() * 0.5).toFixed(2)
+      }));
+    });
+    rotor.appendChild(nodeGroup);
+
+    // Travelling pulses along a subset of edges.
+    if (!REDUCED && edges.length) {
+      const pulseCount = Math.min(22, Math.floor(edges.length * 0.22));
+      const pool = edges.slice().sort(function () { return Math.random() - 0.5; }).slice(0, pulseCount);
+      pool.forEach(function (e) {
+        const colorRoll = Math.random();
+        const color = colorRoll < 0.7 ? 'var(--accent)' : colorRoll < 0.92 ? 'var(--vital)' : 'var(--warning)';
+        const reverse = Math.random() < 0.5;
+        const p1 = reverse ? e.b : e.a, p2 = reverse ? e.a : e.b;
+        const dur = (2.2 + Math.random() * 2.6).toFixed(2) + 's';
+        const dot = el('circle', {
+          class: 'brain-pulse', r: '2.1', fill: color, style: 'color:' + color
+        });
+        const anim = el('animateMotion', {
+          dur: dur, repeatCount: 'indefinite', begin: '-' + (Math.random() * 4).toFixed(2) + 's',
+          path: 'M ' + p1.x + ' ' + p1.y + ' L ' + p2.x + ' ' + p2.y
+        });
+        const fade = el('animate', {
+          attributeName: 'opacity', values: '0;1;1;0', keyTimes: '0;0.15;0.85;1',
+          dur: dur, repeatCount: 'indefinite', begin: anim.getAttribute('begin')
+        });
+        dot.appendChild(anim);
+        dot.appendChild(fade);
+        rotor.appendChild(dot);
+      });
+    }
+  })();
+
+  /* ═══════════════════════════════════════════════════════
+     PATIENT JOURNEY — timing/logic unchanged.
+     ═══════════════════════════════════════════════════════ */
   (function () {
     const track = document.getElementById('jtrack');
     if (!track) return;
@@ -1261,17 +1382,13 @@
     const card  = document.getElementById('jcard');
     const N     = nodes.length;
 
-    /* One loop is about 17 seconds. */
-    const TRANSIT = 520;                                        // pulse travel, station to station
-    const REWIND  = 600;                                        // blackout before the loop restarts
+    const TRANSIT = 520;
+    const REWIND  = 600;
     const DWELL   = [1000, 1300, 2400, 1500, 1500, 1700, 1300, 2600];
 
-    /* ── Card contents, one per station ───────────────────── */
-    const TICK =
-      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none">' +
+    const TICK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none">' +
       '<path d="M5 12.6l4.4 4.4L19 7" stroke="currentColor" stroke-width="2.8" ' +
       'stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
     const HEAD = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
       'stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/>' +
       '<path d="M5.5 20c1.2-3.5 3.6-5.2 6.5-5.2s5.3 1.7 6.5 5.2"/></svg>';
@@ -1295,8 +1412,7 @@
         '</div>';
     }
 
-    let ahead = 3;                       // people still in front, at the queue
-
+    let ahead = 3;
     function queueScene() {
       const turn = ahead === 0;
       return scene({
@@ -1310,58 +1426,26 @@
     }
 
     const SCENES = [
-      function () { return scene({
-        title: 'Patient', tag: 'Checked in',
-        meta: 'General Medicine · Block B',
-        foot: 'Registered successfully'
-      }); },
-      function () { return scene({
-        title: 'Appointment', tag: 'Confirmed', ok: true,
-        meta: 'Dr. Sanket Mehta',
-        rows: [['Today', '10:30 AM']],
-        foot: 'Confirmed'
-      }); },
+      function () { return scene({ title: 'Patient', tag: 'Checked in', meta: 'General Medicine · Block B', foot: 'Registered successfully' }); },
+      function () { return scene({ title: 'Appointment', tag: 'Confirmed', ok: true, meta: 'Dr. Sanket Mehta', rows: [['Today', '10:30 AM']], foot: 'Confirmed' }); },
       queueScene,
       function () { return scene({
-        title: 'Doctor', tag: 'Room 2',
-        meta: 'Dr. Sanket Mehta',
-        extra: '<div class="jc-pair">' + HEAD +
-               '<span class="p-line"></span>' +
-               '<span class="p-doc">' + HEAD + '</span></div>',
+        title: 'Doctor', tag: 'Room 2', meta: 'Dr. Sanket Mehta',
+        extra: '<div class="jc-pair">' + HEAD + '<span class="p-line"></span><span class="p-doc">' + HEAD + '</span></div>',
         foot: 'Consultation in progress', pending: true
       }); },
+      function () { return scene({ title: 'Prescription', tag: 'Issued', ok: true, meta: '2 medicines prescribed', rows: [['Medicine A', '1-0-1'], ['Medicine B', '0-0-1']], foot: 'Saved to your record' }); },
       function () { return scene({
-        title: 'Prescription', tag: 'Issued', ok: true,
-        meta: '2 medicines prescribed',
-        rows: [['Medicine A', '1-0-1'], ['Medicine B', '0-0-1']],
-        foot: 'Saved to your record'
-      }); },
-      function () { return scene({
-        wide: true,
-        title: 'Pharmacy', tag: 'Counter 3',
-        meta: 'Prescription received',
-        rows: [['Medicine A', '<span class="ok">' + TICK + '</span>Dispensed'],
-               ['Medicine B', '<span class="ok">' + TICK + '</span>Dispensed']],
+        wide: true, title: 'Pharmacy', tag: 'Counter 3', meta: 'Prescription received',
+        rows: [['Medicine A', '<span class="ok">' + TICK + '</span>Dispensed'], ['Medicine B', '<span class="ok">' + TICK + '</span>Dispensed']],
         foot: 'Medicines ready'
       }); },
-      function () { return scene({
-        title: 'Report', tag: 'Blood test',
-        rows: [['Uploaded', '<span class="ok">' + TICK + '</span>10:59 AM'],
-               ['Reviewed', '<span class="ok">' + TICK + '</span>By your doctor']],
-        foot: 'Available in your record'
-      }); },
-      function () { return scene({
-        title: 'Care complete', tag: 'Closed', ok: true,
-        meta: 'Appointment, consultation, prescription, medicines and reports — all in one record.',
-        foot: 'Visit closed'
-      }); }
+      function () { return scene({ title: 'Report', tag: 'Blood test', rows: [['Uploaded', '<span class="ok">' + TICK + '</span>10:59 AM'], ['Reviewed', '<span class="ok">' + TICK + '</span>By your doctor']], foot: 'Available in your record' }); },
+      function () { return scene({ title: 'Care complete', tag: 'Closed', ok: true, meta: 'Appointment, consultation, prescription, medicines and reports — all in one record.', foot: 'Visit closed' }); }
     ];
-
     const WIDE = [false, false, false, false, false, true, false, false];
 
-    /* ── Geometry ─────────────────────────────────────────── */
     let pts = [];
-
     function measure() {
       const t = track.getBoundingClientRect();
       pts = dots.map(function (d) {
@@ -1369,12 +1453,10 @@
         return { x: r.left - t.left + r.width / 2, y: r.top - t.top + r.height / 2 };
       });
     }
-
     function place(p) {
       track.style.setProperty('--sx', p.x.toFixed(1) + 'px');
       track.style.setProperty('--sy', p.y.toFixed(1) + 'px');
     }
-
     function placeCard(i) {
       if (!pts[i]) return;
       const w  = card.offsetWidth || 214;
@@ -1382,11 +1464,9 @@
       const cx = Math.max(w / 2 + 2, Math.min(tw - w / 2 - 2, pts[i].x));
       track.style.setProperty('--cx', cx.toFixed(1) + 'px');
     }
-
     function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
     function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
-    /* ── Rendering ────────────────────────────────────────── */
     function render(i) {
       const html = SCENES[i]();
       card.classList.toggle('wide', !!WIDE[i]);
@@ -1397,7 +1477,6 @@
       });
       placeCard(i);
     }
-
     function states(i) {
       nodes.forEach(function (n, k) {
         n.classList.toggle('is-active', k === i);
@@ -1408,7 +1487,6 @@
       track.classList.toggle('all-lit', done);
     }
 
-    /* ── The clock ────────────────────────────────────────── */
     let idx = 0, from = 0, phase = 'dwell', acc = 0, last = 0, raf = null;
     let running = false, swapped = true, visible = false;
 
@@ -1420,37 +1498,33 @@
       track.classList.remove('moving');
       track.classList.add('showing');
     }
-
     function depart() {
       from = idx;
       idx += 1;
       swapped = false;
       phase = 'transit';
-      track.classList.remove('showing');              // the card fades out first
-      track.classList.add('moving');                  // the pulse appears
+      track.classList.remove('showing');
+      track.classList.add('moving');
       nodes.forEach(function (n, k) {
         n.classList.remove('is-active');
         n.classList.toggle('is-done', k < idx);
       });
       measure();
     }
-
     function frame(ts) {
       if (!last) last = ts;
       let dt = ts - last;
       last = ts;
-      if (dt > 120) dt = 16;                          // back from a background tab
+      if (dt > 120) dt = 16;
       acc += dt;
 
       if (phase === 'transit') {
         const p = Math.min(acc / TRANSIT, 1);
         place(lerp(pts[from], pts[idx], ease(p)));
-        /* content is swapped while the card is still invisible */
         if (!swapped && p >= 0.55) { swapped = true; render(idx); }
         if (p >= 1) { phase = 'dwell'; acc = 0; arrive(idx); }
-
       } else if (phase === 'dwell') {
-        if (idx === 2) {                              // 3 → 2 → 1 → your turn
+        if (idx === 2) {
           const step = Math.min(3, Math.floor(acc / 560));
           if (3 - step !== ahead) { ahead = 3 - step; render(2); }
         }
@@ -1459,8 +1533,7 @@
           if (idx === N - 1) { phase = 'rewind'; track.classList.add('rewinding'); track.classList.remove('showing'); }
           else depart();
         }
-
-      } else {                                        // rewind
+      } else {
         if (acc >= REWIND) {
           acc = 0; phase = 'dwell'; from = 0; swapped = true;
           track.classList.remove('is-complete', 'all-lit', 'rewinding');
@@ -1468,10 +1541,8 @@
           arrive(0);
         }
       }
-
       raf = requestAnimationFrame(frame);
     }
-
     function start() {
       if (running || REDUCED) return;
       running = true; last = 0;
@@ -1481,11 +1552,9 @@
       running = false;
       if (raf) { cancelAnimationFrame(raf); raf = null; }
     }
-
-    /* ── Boot ─────────────────────────────────────────────── */
     function init() {
       measure();
-      if (REDUCED) {                                  // the finished pathway, held still
+      if (REDUCED) {
         idx = N - 1;
         render(idx); states(idx); place(pts[idx]);
         track.classList.add('ready', 'showing');
@@ -1499,17 +1568,13 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(init);
     init();
 
-    // Only animate while the section is on screen …
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (entries) {
         visible = entries[0].isIntersecting;
         if (visible && !document.hidden) start(); else stop();
       }, { threshold: 0.15 }).observe(track);
-    } else {
-      visible = true; start();
-    }
+    } else { visible = true; start(); }
 
-    // … and while the tab is in front
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) stop();
       else if (visible) start();
@@ -1525,47 +1590,38 @@
     });
   })();
 
-  // ── Panels ──────────────────────────────────────────────────
+  // ── Auth panel tabs ─────────────────────────────────────────
   const HEADINGS = {
     login:  ['Sign in to PulseCare', 'Use the email you gave at the clinic desk.'],
     signup: ['Create your account',  'Takes about a minute. You can book straight after.']
   };
-
   function setHeading(key) {
     document.getElementById('auth-heading').textContent = HEADINGS[key][0];
     document.getElementById('auth-sub').textContent = HEADINGS[key][1];
   }
-
   function replay(el) {
     el.classList.remove('auth-pane');
     void el.offsetWidth;
     el.classList.add('auth-pane');
   }
-
   function showTab(tab) {
     const login  = document.getElementById('login-form');
     const signup = document.getElementById('signup-form');
     const onLogin = tab === 'login';
-
     document.getElementById('tab-login').classList.toggle('active', onLogin);
     document.getElementById('tab-signup').classList.toggle('active', !onLogin);
     document.getElementById('tab-login').setAttribute('aria-selected', String(onLogin));
     document.getElementById('tab-signup').setAttribute('aria-selected', String(!onLogin));
     document.getElementById('seg-thumb').classList.toggle('right', !onLogin);
-
     login.classList.toggle('hidden', !onLogin);
     signup.classList.toggle('hidden', onLogin);
     replay(onLogin ? login : signup);
-
     document.getElementById('alert-box').innerHTML = '';
     setHeading(tab);
   }
-
   function showAlert(message, type = 'error') {
-    document.getElementById('alert-box').innerHTML =
-      '<div class="alert alert-' + type + '">' + message + '</div>';
+    document.getElementById('alert-box').innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
   }
-
   function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
     const shown = input.type === 'text';
@@ -1573,66 +1629,47 @@
     btn.setAttribute('aria-label', shown ? 'Show password' : 'Hide password');
     input.focus();
   }
-
   function setLoading(prefix, isLoading, loadingText, defaultText) {
     document.getElementById(prefix + '-spinner').classList.toggle('show', isLoading);
     document.getElementById(prefix + '-btn-text').textContent = isLoading ? loadingText : defaultText;
     document.getElementById(prefix + '-btn').disabled = isLoading;
   }
 
-  // ── Demo login: types the credentials in, then submits ──────
   function typeInto(input, value, speed) {
     return new Promise(function (resolve) {
       input.classList.add('autofilling');
       input.value = '';
-      if (REDUCED) {
-        input.value = value;
-        input.classList.remove('autofilling');
-        return resolve();
-      }
+      if (REDUCED) { input.value = value; input.classList.remove('autofilling'); return resolve(); }
       let i = 0;
       const tick = setInterval(function () {
         input.value = value.slice(0, ++i);
-        if (i >= value.length) {
-          clearInterval(tick);
-          input.classList.remove('autofilling');
-          resolve();
-        }
+        if (i >= value.length) { clearInterval(tick); input.classList.remove('autofilling'); resolve(); }
       }, speed);
     });
   }
-
   async function demoLogin(role, btn) {
     const account = DEMO_ACCOUNTS[role];
     if (!account) return;
-
     showTab('login');
     const buttons = document.querySelectorAll('.demo-btn');
     buttons.forEach(function (b) { b.disabled = true; });
     btn.classList.add('running');
-
     await typeInto(document.getElementById('login-email'), account.email, 22);
     await new Promise(function (r) { setTimeout(r, 120); });
     await typeInto(document.getElementById('login-password'), account.password, 34);
     await new Promise(function (r) { setTimeout(r, 200); });
-
     btn.classList.remove('running');
     buttons.forEach(function (b) { b.disabled = false; });
-
     document.getElementById('login-form').requestSubmit();
   }
 
-  // ── Submissions ─────────────────────────────────────────────
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     setLoading('login', true, 'Signing in…', 'Sign in');
     try {
       const data = await apiRequest('/auth/login', {
         method: 'POST',
-        body: {
-          email: document.getElementById('login-email').value,
-          password: document.getElementById('login-password').value,
-        },
+        body: { email: document.getElementById('login-email').value, password: document.getElementById('login-password').value },
       });
       loginSuccess(data);
     } catch (err) {
@@ -1660,6 +1697,23 @@
     } finally {
       setLoading('signup', false, 'Creating account…', 'Create account');
     }
+  });
+
+  // ── Contact form (client-side only — wire to a real endpoint when you have one) ──
+  document.getElementById('contact-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const box = document.getElementById('contact-alert-box');
+    const btn = document.getElementById('contact-btn');
+    document.getElementById('contact-spinner').classList.add('show');
+    document.getElementById('contact-btn-text').textContent = 'Sending…';
+    btn.disabled = true;
+    setTimeout(function () {
+      box.innerHTML = '<div class="alert alert-success">Thanks — your message has been noted. We\'ll get back to you soon.</div>';
+      document.getElementById('contact-form').reset();
+      document.getElementById('contact-spinner').classList.remove('show');
+      document.getElementById('contact-btn-text').textContent = 'Send message';
+      btn.disabled = false;
+    }, 700);
   });
 </script>
 
